@@ -585,7 +585,7 @@
 
         // --- GLOBAL API CONNECTION HANDLER ---
         // Guaranteed absolute routing to prevent cross-origin fetch failures
-        const API_BASE_URL = window.location.protocol === 'file:' ? 'http://127.0.0.1:5000' : window.location.origin;
+        const API_BASE_URL = 'https://eduanalyzer.onrender.com';
 
         // --- TOAST NOTIFICATIONS ---
         function showToast(message, type = 'info') {
