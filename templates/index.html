@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAnalyzer | Premium Dashboard</title>
+    
+    <!-- Modern Font: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons for premium iconography -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Tailwind CSS with custom configuration -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: {
+                        primary: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' },
+                        surface: '#f8fafc',
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                        'glow': '0 0 20px rgba(99, 102, 241, 0.4)',
+                    },
+                    animation: { 
+                        'fade-in': 'fadeIn 0.4s ease-out forwards',
+                        'slide-up': 'slideUp 0.3s ease-out forwards'
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px) translateX(-50%)' }, '100%': { opacity: '1', transform: 'translateY(-50%) translateX(-50%)' } }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Glassmorphism utilities */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+        }
+
+        /* Smooth tab transitions */
+        .tab-content { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .tab-content.active { display: block; opacity: 1; animation: fadeIn 0.4s ease forwards; }
+
+        /* Heatmap score pills */
+        .score-pill {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px; border-radius: 12px; font-weight: 700; font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+        .score-pill:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        
+        .bg-gradient-primary { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
+
+        /* Dark Mode Overrides */
+        html.dark body { background-color: #0f172a; color: #f8fafc; }
+        html.dark .bg-surface { background-color: #0f172a !important; }
+        html.dark .glass-card { background: rgba(30, 41, 59, 0.85); border-color: rgba(255,255,255,0.05); }
+        html.dark .bg-white { background-color: #1e293b !important; }
+        html.dark .bg-white\/95 { background-color: rgba(30, 41, 59, 0.95) !important; } 
+        html.dark .bg-white\/80 { background-color: rgba(30, 41, 59, 0.8) !important; }
+        html.dark .bg-slate-50 { background-color: #0f172a !important; }
+        html.dark .hover\:bg-slate-50:hover { background-color: #334155 !important; }
+        html.dark .bg-slate-50\/80 { background-color: rgba(15, 23, 42, 0.8) !important; }
+        html.dark .bg-slate-50\/50 { background-color: rgba(15, 23, 42, 0.5) !important; }
+        html.dark .bg-slate-100 { background-color: #334155 !important; }
+        html.dark .bg-slate-200 { background-color: #475569 !important; } 
+        html.dark .bg-slate-200\/50 { background-color: rgba(71, 85, 105, 0.5) !important; } 
+        
+        /* Text Contrast Fixes */
+        html.dark .text-slate-800 { color: #f8fafc !important; }
+        html.dark .text-slate-700 { color: #f1f5f9 !important; }
+        html.dark .text-slate-600 { color: #cbd5e1 !important; }
+        html.dark .text-slate-500 { color: #94a3b8 !important; }
+        html.dark .text-slate-400 { color: #64748b !important; }
+        html.dark .text-primary-700 { color: #a5b4fc !important; } 
+        html.dark .text-primary-600 { color: #818cf8 !important; } 
+        html.dark .text-rose-600 { color: #fb7185 !important; } 
+        
+        /* Border Fixes */
+        html.dark .border-slate-100 { border-color: #334155 !important; }
+        html.dark .border-slate-200, html.dark .border-slate-300 { border-color: #475569 !important; }
+        html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: #334155 !important; }
+        html.dark input { background-color: #1e293b !important; color: #f8fafc !important; border-color: #475569 !important; }
+        html.dark .border-white { border-color: #1e293b !important; }
+    </style>
+</head>
+<body class="bg-surface text-slate-800 antialiased min-h-screen relative overflow-x-hidden">
+
+    <!-- Decorative background blobs -->
+    <div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-300/20 blur-3xl -z-10 pointer-events-none"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-rose-300/20 blur-3xl -z-10 pointer-events-none"></div>
+
+    <!-- Premium Top Navbar -->
+    <nav class="sticky top-0 z-50 glass-card border-b border-white/40">
+        <div class="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex items-center gap-3 cursor-pointer group">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center text-white shadow-glow group-hover:scale-105 transition-transform duration-300">
+                        <i class="ph ph-chart-line-up text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">EduAnalyzer</h1>
+                        <p class="text-[0.65rem] font-semibold text-slate-400 uppercase tracking-wider">Data-Driven Insights</p>
+                    </div>
+                </div>
+
+                <!-- Global Search with Dropdown -->
+                <div class="hidden md:flex flex-1 max-w-lg mx-8 relative">
+                    <div class="relative w-full group">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary-500 transition-colors z-10">
+                            <i class="ph ph-magnifying-glass text-lg"></i>
+                        </div>
+                        <input type="text" id="searchInput" class="block w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-full leading-5 bg-slate-50/80 backdrop-blur-sm placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all duration-300 shadow-sm relative z-10" placeholder="Search students, teachers, or subjects..." autocomplete="off">
+                        <button id="clearSearch" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-rose-500 hidden z-10">
+                            <i class="ph ph-x-circle text-lg"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Search Results Dropdown -->
+                    <div id="searchDropdown" class="absolute top-full left-0 w-full mt-2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 hidden max-h-[350px] overflow-y-auto z-50 divide-y divide-slate-100 transform origin-top transition-all">
+                        <!-- Content injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Right Actions -->
+                <div class="flex items-center gap-4">
+                    <!-- NEW: DB Connection Status -->
+                    <div id="backendStatus" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 text-xs font-bold border border-slate-200 shadow-sm transition-colors">
+                        <span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse"></span> Checking DB...
+                    </div>
+                    
+                    <div class="relative">
+                        <button id="notificationBtn" class="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-full transition-colors relative" aria-label="Notifications">
+                            <i class="ph ph-bell text-xl"></i>
+                            <span id="notificationBadge" class="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white transition-opacity duration-300"></span>
+                        </button>
+                        <!-- Notification Dropdown -->
+                        <div id="notificationDropdown" class="absolute right-0 mt-2 w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 hidden z-50 overflow-hidden transform origin-top-right transition-all">
+                            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                <h3 class="text-sm font-bold text-slate-800">Notifications</h3>
+                                <button id="markReadBtn" class="text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors">Mark all as read</button>
+                            </div>
+                            <div id="notificationList" class="max-h-80 overflow-y-auto custom-scrollbar">
+                                <div class="relative group">
+                                    <a href="#" onclick="handleNotificationClick(event, 'Ian Malcolm', 'Student')" class="p-4 pr-10 border-b border-slate-50 hover:bg-slate-50 transition-colors flex gap-3 block">
+                                        <div class="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0 mt-0.5"><i class="ph-fill ph-warning-circle text-lg"></i></div>
+                                        <div>
+                                            <p class="text-sm font-bold text-slate-800 leading-tight">Attendance Alert</p>
+                                            <p class="text-xs text-slate-500 mt-1">Ian Malcolm's attendance has dropped below 45%.</p>
+                                            <p class="text-[0.65rem] font-semibold text-slate-400 mt-2 uppercase tracking-wide">10 mins ago</p>
+                                        </div>
+                                    </a>
+                                    <button class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 rounded-full p-1 shadow-sm border border-slate-100" onclick="dismissNotification(this)"><i class="ph ph-x"></i></button>
+                                </div>
+                                <div class="relative group">
+                                    <a href="#" onclick="handleNotificationClick(event, null, null, 'Term 3 results are now reflected in the Class Score Trend chart.')" class="p-4 pr-10 border-b border-slate-50 hover:bg-slate-50 transition-colors flex gap-3 block">
+                                        <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5"><i class="ph-fill ph-chart-line-up text-lg"></i></div>
+                                        <div>
+                                            <p class="text-sm font-bold text-slate-800 leading-tight">Term 3 Results Uploaded</p>
+                                            <p class="text-xs text-slate-500 mt-1">Class average improved by 2.7% over last term.</p>
+                                            <p class="text-[0.65rem] font-semibold text-slate-400 mt-2 uppercase tracking-wide">2 hours ago</p>
+                                        </div>
+                                    </a>
+                                    <button class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 rounded-full p-1 shadow-sm border border-slate-100" onclick="dismissNotification(this)"><i class="ph ph-x"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="h-8 w-px bg-slate-200"></div>
+                    <div class="relative">
+                        <button id="userMenuBtn" class="flex items-center gap-2 hover:opacity-80 transition-opacity" aria-label="User profile">
+                            <img class="h-9 w-9 rounded-full object-cover border-2 border-white shadow-sm" src="https://ui-avatars.com/api/?name=Admin+User&background=6366f1&color=fff" alt="User avatar">
+                            <div class="hidden sm:block text-left">
+                                <p class="text-sm font-semibold text-slate-700 leading-none">Admin</p>
+                                <p class="text-xs text-slate-500 mt-0.5">Administrator</p>
+                            </div>
+                            <i class="ph ph-caret-down text-slate-400 text-sm ml-1"></i>
+                        </button>
+                        <!-- Admin Dropdown -->
+                        <div id="userDropdown" class="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 hidden z-50 overflow-hidden transform origin-top-right transition-all">
+                            <div class="p-2">
+                                <a href="#" onclick="openProfileModal(); document.getElementById('userDropdown').classList.add('hidden'); return false;" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-colors"><i class="ph ph-user"></i> My Profile</a>
+                                <a href="#" onclick="openSettingsModal(); document.getElementById('userDropdown').classList.add('hidden'); return false;" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-colors"><i class="ph ph-gear"></i> Settings</a>
+                                <div class="h-px bg-slate-100 my-1"></div>
+                                <a href="#" onclick="showToast('You have been securely signed out.', 'success'); document.getElementById('userDropdown').classList.add('hidden'); return false;" class="flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"><i class="ph ph-sign-out"></i> Sign Out</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Workspace -->
+    <main class="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Toolbar & Tabs -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+            <!-- Segmented Control Tabs -->
+            <div class="inline-flex p-1.5 bg-slate-200/50 backdrop-blur-sm rounded-2xl w-full lg:w-auto overflow-x-auto shadow-inner" role="tablist">
+                <button onclick="switchTab('heatmap')" id="tab-heatmap" role="tab" aria-selected="true" class="relative flex-1 lg:flex-none py-2.5 px-6 rounded-xl text-sm font-semibold transition-all duration-300 text-primary-700 bg-white shadow-sm whitespace-nowrap flex items-center gap-2">
+                    <i class="ph ph-squares-four text-lg"></i> Heatmap
+                </button>
+                <button onclick="switchTab('students')" id="tab-students" role="tab" aria-selected="false" class="relative flex-1 lg:flex-none py-2.5 px-6 rounded-xl text-sm font-semibold transition-all duration-300 text-slate-500 hover:text-slate-800 hover:bg-white/50 whitespace-nowrap flex items-center gap-2">
+                    <i class="ph ph-users text-lg"></i> Students
+                </button>
+                <button onclick="switchTab('teachers')" id="tab-teachers" role="tab" aria-selected="false" class="relative flex-1 lg:flex-none py-2.5 px-6 rounded-xl text-sm font-semibold transition-all duration-300 text-slate-500 hover:text-slate-800 hover:bg-white/50 whitespace-nowrap flex items-center gap-2">
+                    <i class="ph ph-chalkboard-teacher text-lg"></i> Teaching Styles
+                </button>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-3">
+                <div class="relative z-20">
+                    <button id="filterBtn" class="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm flex items-center gap-2">
+                        <i class="ph ph-faders"></i> Filters
+                    </button>
+                    <!-- Filter Dropdown -->
+                    <div id="filterDropdown" class="absolute right-0 md:left-auto md:right-0 mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 hidden p-4 transform origin-top transition-all z-50">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-sm font-bold text-slate-800">Filter Data</h3>
+                            <button id="resetFilters" class="text-xs text-primary-600 hover:text-primary-700 font-semibold">Reset All</button>
+                        </div>
+                        <div class="max-h-[50vh] overflow-y-auto custom-scrollbar pr-2 mb-4 space-y-4">
+                            <!-- Terms -->
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Academic Term</h4>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" class="term-filter w-4 h-4 text-primary-600 rounded border-slate-300 focus:ring-primary-500" value="Term 1" checked> <span class="text-sm text-slate-600 group-hover:text-slate-800">Term 1 (Fall)</span></label>
+                                    <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" class="term-filter w-4 h-4 text-primary-600 rounded border-slate-300 focus:ring-primary-500" value="Term 2" checked> <span class="text-sm text-slate-600 group-hover:text-slate-800">Term 2 (Spring)</span></label>
+                                    <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" class="term-filter w-4 h-4 text-primary-600 rounded border-slate-300 focus:ring-primary-500" value="Term 3" checked> <span class="text-sm text-slate-600 group-hover:text-slate-800">Term 3 (Summer)</span></label>
+                                </div>
+                            </div>
+                            <!-- Performance -->
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Student Performance</h4>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" class="perf-filter w-4 h-4 text-emerald-500 rounded border-slate-300 focus:ring-emerald-500" value="Top" checked> <span class="text-sm text-slate-600 group-hover:text-slate-800">Top Performers (≥80)</span></label>
+                                    <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" class="perf-filter w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-500" value="Average" checked> <span class="text-sm text-slate-600 group-hover:text-slate-800">Average (60-79)</span></label>
+                                    <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" class="perf-filter w-4 h-4 text-rose-500 rounded border-slate-300 focus:ring-rose-500" value="Weak" checked> <span class="text-sm text-slate-600 group-hover:text-slate-800">Needs Attention (<60)</span></label>
+                                </div>
+                            </div>
+                            <!-- Teaching Style -->
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Teaching Methodology</h4>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" class="style-filter w-4 h-4 text-indigo-500 rounded border-slate-300 focus:ring-indigo-500" value="Visual" checked> <span class="text-sm text-slate-600 group-hover:text-slate-800">Visual</span></label>
+                                    <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" class="style-filter w-4 h-4 text-purple-500 rounded border-slate-300 focus:ring-purple-500" value="Blended" checked> <span class="text-sm text-slate-600 group-hover:text-slate-800">Blended</span></label>
+                                    <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" class="style-filter w-4 h-4 text-emerald-500 rounded border-slate-300 focus:ring-emerald-500" value="Kinesthetic" checked> <span class="text-sm text-slate-600 group-hover:text-slate-800">Kinesthetic</span></label>
+                                    <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" class="style-filter w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-500" value="Auditory" checked> <span class="text-sm text-slate-600 group-hover:text-slate-800">Auditory</span></label>
+                                    <label class="flex items-center gap-2 cursor-pointer group"><input type="checkbox" class="style-filter w-4 h-4 text-blue-500 rounded border-slate-300 focus:ring-blue-500" value="Reading/Writing" checked> <span class="text-sm text-slate-600 group-hover:text-slate-800">Reading/Writing</span></label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="h-px bg-slate-100 mb-4"></div>
+                        <button id="applyFiltersBtn" class="w-full py-2 bg-slate-100 hover:bg-primary-50 text-slate-800 hover:text-primary-700 text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2"><i class="ph ph-funnel"></i> Apply Filters</button>
+                    </div>
+                </div>
+                
+                <button id="syncLiveBtn" class="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm flex items-center gap-2">
+                    <i class="ph ph-arrows-clockwise"></i> Sync Live Data
+                </button>
+
+                <button id="exportBtn" class="px-5 py-2.5 bg-gradient-primary text-white rounded-xl text-sm font-semibold hover:shadow-glow hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                    <i class="ph ph-download-simple"></i> Export Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 1: Heatmap -->
+        <div id="sec-heatmap" class="tab-content active" role="tabpanel">
+            <div class="glass-card p-2 rounded-3xl">
+                <div class="bg-white rounded-2xl p-6 sm:p-8">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-800">Class Performance Matrix</h2>
+                            <p class="text-sm text-slate-500 mt-1">Average scores across subjects over selected academic terms.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="openAddStudentModal()" class="flex items-center gap-2 px-4 py-2 bg-primary-50 hover:bg-primary-100 text-primary-600 font-bold text-sm rounded-xl transition-colors border border-primary-100 shadow-sm">
+                                <i class="ph ph-plus-circle text-lg"></i> Add Student
+                            </button>
+                            <div class="hidden md:flex gap-4 text-xs font-semibold text-slate-500 bg-slate-50 px-4 py-2 rounded-lg border border-slate-100">
+                                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-emerald-100 border border-emerald-500"></span> Excellent (≥80)</span>
+                                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-amber-100 border border-amber-500"></span> Average (60-79)</span>
+                                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-rose-100 border border-rose-500"></span> Needs Attention (<60)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 max-h-[60vh] custom-scrollbar">
+                        <table class="w-full text-left border-collapse whitespace-nowrap" id="heatmap-table">
+                            <thead class="sticky top-0 bg-slate-50 z-10 shadow-sm backdrop-blur-md">
+                                <tr id="heatmap-header" class="text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                                    <th class="p-4 font-bold bg-slate-50 w-64">Student Name</th>
+                                </tr>
+                            </thead>
+                            <tbody id="heatmap-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Student Analysis -->
+        <div id="sec-students" class="tab-content" role="tabpanel">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Left Column: Lists -->
+                <div class="lg:col-span-4 flex flex-col gap-6">
+                    <!-- Needs Attention -->
+                    <div class="glass-card rounded-3xl p-6 border-t-4 border-t-rose-500 flex-1 flex flex-col max-h-[400px]">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <i class="ph-fill ph-warning-circle text-rose-500 text-xl"></i> Needs Attention
+                            </h2>
+                            <span class="text-xs font-bold px-2 py-1 bg-rose-100 text-rose-700 rounded-lg" id="weak-count">0</span>
+                        </div>
+                        <div class="overflow-y-auto custom-scrollbar flex-1 pr-2">
+                            <ul id="weak-list" class="space-y-3"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Top Performers -->
+                    <div class="glass-card rounded-3xl p-6 border-t-4 border-t-emerald-500 flex-1 flex flex-col max-h-[400px]">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <i class="ph-fill ph-trophy text-emerald-500 text-xl"></i> Top Performers
+                            </h2>
+                            <span class="text-xs font-bold px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg" id="strong-count">0</span>
+                        </div>
+                        <div class="overflow-y-auto custom-scrollbar flex-1 pr-2">
+                            <ul id="strong-list" class="space-y-3"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Charts -->
+                <div class="lg:col-span-8 flex flex-col gap-6">
+                    <!-- Top Row Charts -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="glass-card rounded-3xl p-6">
+                            <h2 class="text-base font-bold text-slate-800 mb-4">Attendance Impact</h2>
+                            <div class="relative h-[250px] w-full">
+                                <canvas id="attendanceChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="glass-card rounded-3xl p-6">
+                            <h2 class="text-base font-bold text-slate-800 mb-4">Performance Distribution</h2>
+                            <div class="relative h-[250px] w-full flex justify-center">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Bottom Full Chart -->
+                    <div class="glass-card rounded-3xl p-6">
+                        <h2 class="text-base font-bold text-slate-800 mb-4">Class Score Trend by Term</h2>
+                        <div class="relative h-[300px] w-full">
+                            <canvas id="termTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Learning Style Affinity Matrix -->
+            <div class="glass-card rounded-3xl p-6 mt-6">
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">Learning Style Affinity Matrix</h2>
+                        <p class="text-sm text-slate-500 mt-1">Student understanding levels (average scores) mapped by teaching methodology.</p>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto rounded-xl border border-slate-200 max-h-[400px] custom-scrollbar">
+                    <table class="w-full text-left border-collapse whitespace-nowrap" id="affinity-table">
+                        <thead class="sticky top-0 bg-slate-50 z-10 shadow-sm backdrop-blur-md">
+                            <tr id="affinity-header" class="text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                                <th class="p-4 font-bold bg-slate-50 w-64">Student Name</th>
+                            </tr>
+                        </thead>
+                        <tbody id="affinity-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Teaching Style Analyzer -->
+        <div id="sec-teachers" class="tab-content" role="tabpanel">
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">Faculty & Subject Efficacy</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="teacher-cards"></div>
+            </div>
+
+            <!-- Global Comparison Chart -->
+            <div class="glass-card rounded-3xl p-6 sm:p-8">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold text-slate-800">Global Average by Teaching Style</h2>
+                    <p class="text-sm text-slate-500">Comparing the aggregate success rate of different pedagogical approaches.</p>
+                </div>
+                <div class="relative h-[400px] w-full">
+                    <canvas id="teachingStyleChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Deep Dive Search Details Modal -->
+    <div id="entityModal" class="fixed inset-0 z-[100] hidden">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeDetailsModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh] animate-slide-up">
+            <div class="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
+                <h3 id="modalTitle" class="text-xl font-bold text-slate-800 flex items-center gap-3"></h3>
+                <button onclick="closeDetailsModal()" class="text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm border border-slate-100">
+                    <i class="ph ph-x text-lg"></i>
+                </button>
+            </div>
+            <div id="modalBody" class="p-6 overflow-y-auto custom-scrollbar bg-surface flex-1"></div>
+        </div>
+    </div>
+
+    <!-- Admin Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-[110] hidden">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeSettingsModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-slide-up">
+            <div class="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
+                <h3 class="text-xl font-bold text-slate-800 flex items-center gap-3"><i class="ph-fill ph-gear text-primary-500"></i> Platform Settings</h3>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm border border-slate-100"><i class="ph ph-x text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-6">
+                <!-- Toggles -->
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-sm text-slate-800">Email Notifications</p>
+                        <p class="text-xs text-slate-500">Receive daily summary reports.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" value="" class="sr-only peer" checked onchange="showToast(this.checked ? 'Email notifications enabled' : 'Email notifications disabled', 'success')">
+                      <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+                    </label>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-sm text-slate-800">Dark Mode</p>
+                        <p class="text-xs text-slate-500">Switch to a dark theme.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" id="darkModeToggle" class="sr-only peer" onchange="toggleDarkMode()">
+                      <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+                    </label>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-sm text-slate-800">Live Sync Updates</p>
+                        <p class="text-xs text-slate-500">Automatically pull Excel changes.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" value="" class="sr-only peer" checked onchange="showToast('Live Auto-Sync toggled.', 'success')">
+                      <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+                    </label>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+                <button onclick="closeSettingsModal();" class="px-5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold rounded-xl transition-colors shadow-sm">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Profile Modal -->
+    <div id="profileModal" class="fixed inset-0 z-[110] hidden">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeProfileModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-slide-up">
+            <div class="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
+                <h3 class="text-xl font-bold text-slate-800 flex items-center gap-3"><i class="ph-fill ph-user text-primary-500"></i> My Profile</h3>
+                <button onclick="closeProfileModal()" class="text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm border border-slate-100"><i class="ph ph-x text-lg"></i></button>
+            </div>
+            <div class="p-6 flex flex-col items-center">
+                <div class="relative mb-4">
+                    <img class="h-24 w-24 rounded-full object-cover border-4 border-white shadow-lg" src="https://ui-avatars.com/api/?name=Admin+User&background=6366f1&color=fff&size=128" alt="User avatar">
+                    <button class="absolute bottom-0 right-0 p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors shadow-sm border-2 border-white"><i class="ph ph-pencil-simple"></i></button>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-1">Admin User</h2>
+                <p class="text-sm font-semibold text-primary-600 uppercase tracking-wider mb-6">System Administrator</p>
+                
+                <div class="w-full space-y-4">
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-400 shadow-sm flex-shrink-0"><i class="ph ph-envelope-simple text-xl"></i></div>
+                        <div class="flex-1 overflow-hidden">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Email Address</p>
+                            <p class="text-sm font-semibold text-slate-700 truncate">admin@eduanalyzer.edu</p>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-400 shadow-sm flex-shrink-0"><i class="ph ph-shield-check text-xl"></i></div>
+                        <div class="flex-1 overflow-hidden">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Access Level</p>
+                            <p class="text-sm font-semibold text-slate-700 truncate">Full Access</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-between">
+                <button onclick="showToast('Password reset link sent to your email.', 'success')" class="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-xl transition-colors shadow-sm">Reset Password</button>
+                <button onclick="closeProfileModal(); showToast('Profile settings saved successfully.', 'success')" class="px-5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold rounded-xl transition-colors shadow-sm">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="fixed inset-0 z-[120] hidden">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeAddStudentModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-slide-up flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
+                <h3 class="text-xl font-bold text-slate-800 flex items-center gap-3"><i class="ph-fill ph-user-plus text-primary-500"></i> Add New Student</h3>
+                <button onclick="closeAddStudentModal()" class="text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm border border-slate-100"><i class="ph ph-x text-lg"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-5" id="addStudentFormBody">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Student Name</label>
+                    <input type="text" id="newStudentName" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-sm" placeholder="e.g. Jane Doe">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Attendance (%)</label>
+                    <input type="number" id="newStudentAttendance" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-sm" placeholder="85" min="0" max="100">
+                </div>
+                <div class="h-px bg-slate-100 my-2"></div>
+                <div>
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Subject Scores</h4>
+                    <div id="newStudentSubjects" class="space-y-3">
+                        <!-- Dynamic subjects injected here -->
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
+                <button onclick="closeAddStudentModal()" class="px-5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-xl transition-colors shadow-sm">Cancel</button>
+                <button onclick="saveNewStudent()" class="px-5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold rounded-xl transition-colors shadow-sm flex items-center gap-2"><i class="ph ph-floppy-disk"></i> Save Student</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // --- GLOBAL CHART DEFAULTS ---
+        Chart.defaults.font.family = '"Plus Jakarta Sans", sans-serif';
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.scale.grid.color = 'rgba(226, 232, 240, 0.5)';
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.9)';
+        Chart.defaults.plugins.tooltip.padding = 12;
+        Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+        window.appCharts = {};
+        let searchIndex = [];
+        let currentLiveData = { heatmap: null, students: null, teachers: null };
+        let notificationsRead = false; 
+        
+        let localAddedStudents = []; 
+        let renamedStudents = {};
+        let renamedTeachers = {};
+        let editedScores = {}; 
+
+        // --- GLOBAL API CONNECTION HANDLER ---
+        // Guaranteed absolute routing to prevent cross-origin fetch failures
+        const API_BASE_URL = window.location.protocol === 'file:' ? 'http://127.0.0.1:5000' : window.location.origin;
+
+        // --- TOAST NOTIFICATIONS ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer') || createToastContainer();
+            const toast = document.createElement('div');
+            
+            let icon = 'ph-info';
+            let colorClasses = 'bg-white border-primary-100 text-slate-700';
+            let iconColor = 'text-primary-500';
+            let bgColor = 'bg-primary-50';
+
+            if (type === 'success') {
+                icon = 'ph-check-circle';
+                colorClasses = 'bg-white border-emerald-100 text-slate-700';
+                iconColor = 'text-emerald-500';
+                bgColor = 'bg-emerald-50';
+            } else if (type === 'error') {
+                icon = 'ph-warning-circle';
+                colorClasses = 'bg-white border-rose-100 text-slate-700';
+                iconColor = 'text-rose-500';
+                bgColor = 'bg-rose-50';
+            }
+
+            toast.className = `flex items-center gap-3 p-4 rounded-2xl shadow-xl border ${colorClasses} transform transition-all duration-300 min-w-[250px] shadow-glass translate-y-10 opacity-0`;
+            toast.innerHTML = `
+                <div class="w-10 h-10 rounded-full ${bgColor} flex items-center justify-center flex-shrink-0">
+                    <i class="ph-fill ${icon} text-xl ${iconColor}"></i>
+                </div>
+                <p class="text-sm font-semibold">${message}</p>
+            `;
+            container.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.remove('translate-y-10', 'opacity-0'));
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000); // Extended toast time so you can read the error message clearly
+        }
+
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'fixed bottom-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none transition-all';
+            document.body.appendChild(container);
+            return container;
+        }
+
+        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
+        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+        function openProfileModal() { document.getElementById('profileModal').classList.remove('hidden'); }
+        function closeProfileModal() { document.getElementById('profileModal').classList.add('hidden'); }
+
+        function handleNotificationClick(e, entityName, entityType, fallbackMessage) {
+            e.preventDefault();
+            document.getElementById('notificationDropdown').classList.add('hidden');
+            if (entityName && entityType) openDetailsModal(entityName, entityType);
+            else if (fallbackMessage) showToast(fallbackMessage, 'info');
+        }
+
+        function dismissNotification(buttonElement) {
+            const parent = buttonElement.closest('.relative.group');
+            parent.style.opacity = '0';
+            setTimeout(() => {
+                parent.remove();
+                if (document.getElementById('notificationList').children.length === 0) markAllNotificationsRead();
+            }, 200);
+            showToast('Notification dismissed', 'info');
+        }
+
+        function markAllNotificationsRead() {
+            notificationsRead = true;
+            document.getElementById('notificationBadge')?.classList.add('hidden');
+            document.getElementById('notificationList').innerHTML = `<div class="p-8 text-center flex flex-col items-center justify-center text-slate-400"><div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3"><i class="ph ph-check-circle text-2xl text-slate-300"></i></div><p class="text-sm font-bold text-slate-600">You're all caught up!</p><p class="text-xs mt-1">No new notifications.</p></div>`;
+        }
+
+        // Add Student
+        function openAddStudentModal() {
+            const modal = document.getElementById('addStudentModal');
+            const subjectsContainer = document.getElementById('newStudentSubjects');
+            document.getElementById('newStudentName').value = '';
+            document.getElementById('newStudentAttendance').value = '85';
+            
+            if (currentLiveData.heatmap && currentLiveData.heatmap.subjects) {
+                subjectsContainer.innerHTML = currentLiveData.heatmap.subjects.map(sub => `
+                    <div class="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
+                        <label class="text-sm font-semibold text-slate-600 truncate flex-1" title="${sub}">${sub}</label>
+                        <input type="number" data-subject="${sub}" class="new-student-score w-24 px-3 py-1.5 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-sm text-center font-bold text-slate-800" placeholder="-" min="0" max="100">
+                    </div>
+                `).join('');
+            }
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+        }
+
+        function closeAddStudentModal() {
+            document.getElementById('addStudentModal').classList.add('hidden');
+            document.getElementById('addStudentModal').classList.remove('flex');
+        }
+
+        // --- NEW: ERROR HANDLING FOR FETCH SAVES ---
+        async function saveNewStudent() {
+            const nameInput = document.getElementById('newStudentName').value.trim();
+            const attInput = parseFloat(document.getElementById('newStudentAttendance').value) || 85.0;
+            if (!nameInput) return showToast('Student name is required.', 'error');
+
+            const newScores = {}; let totalScore = 0; let count = 0;
+            document.querySelectorAll('.new-student-score').forEach(input => {
+                const sub = input.getAttribute('data-subject'), val = input.value;
+                if (val !== '' && !isNaN(val)) { newScores[sub] = parseFloat(val); totalScore += parseFloat(val); count++; } 
+                else newScores[sub] = '-';
+            });
+            const avgScore = count > 0 ? parseFloat((totalScore / count).toFixed(1)) : 0;
+            
+            const newStudentObj = {
+                name: nameInput, attendance: attInput, avg: avgScore, scores: newScores,
+                profile: { student: nameInput, scores: { "Visual": 60, "Blended": 65, "Auditory": 55, "Kinesthetic": 50, "Reading/Writing": 70 } }
+            };
+
+            try {
+                const targetUrl = `${API_BASE_URL}/api/add_student`;
+                const response = await fetch(targetUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newStudentObj) });
+                
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.message || "Failed to update Excel DB.");
+                }
+                showToast(response.message || `${nameInput} added and saved to Live Database!`, 'success');
+                closeAddStudentModal();
+            } catch (e) {
+                console.error(e);
+                showToast(e.message === "Failed to fetch" ? "Backend Server is Offline." : `Error: ${e.message}`, 'error');
+                return; // Stop execution on hard error so user can fix Excel lock/module
+            }
+
+            const selectedTerms = Array.from(document.querySelectorAll('.term-filter:checked')).map(cb => cb.value);
+            const selectedPerf = Array.from(document.querySelectorAll('.perf-filter:checked')).map(cb => cb.value);
+            const selectedStyles = Array.from(document.querySelectorAll('.style-filter:checked')).map(cb => cb.value);
+            loadDashboard(selectedTerms, selectedPerf, selectedStyles);
+        }
+
+        // --- MOCK DATA (Fallback) ---
+        const mockData = {
+            heatmap: {
+                subjects: ["Data Science", "Cryptography", "Entrepreneurship", "Internet of Things", "Cloud Computing"],
+                matrix: [
+                    { student: "Alice Johnson", scores: { "Data Science": 85, "Cryptography": 73, "Entrepreneurship": 78, "Internet of Things": 82, "Cloud Computing": 88 } },
+                    { student: "Tina Lewis", scores: { "Data Science": 84, "Cryptography": 80, "Entrepreneurship": 82, "Internet of Things": 78, "Cloud Computing": 85 } },
+                    { student: "Bob Smith", scores: { "Data Science": 95, "Cryptography": 91, "Entrepreneurship": 89, "Internet of Things": 90, "Cloud Computing": 92 } },
+                    { student: "Charlie Davis", scores: { "Data Science": 45, "Cryptography": 58, "Entrepreneurship": 52, "Internet of Things": 50, "Cloud Computing": 48 } },
+                    { student: "Diana Prince", scores: { "Data Science": 88, "Cryptography": 85, "Entrepreneurship": 90, "Internet of Things": 85, "Cloud Computing": 89 } },
+                    { student: "Evan Wright", scores: { "Data Science": 92, "Cryptography": 96, "Entrepreneurship": 94, "Internet of Things": 94, "Cloud Computing": 95 } },
+                    { student: "Frank Castle", scores: { "Data Science": 55, "Cryptography": 40, "Entrepreneurship": 61, "Internet of Things": 45, "Cloud Computing": 50 } },
+                    { student: "Gregory House", scores: { "Data Science": 45, "Cryptography": 50, "Entrepreneurship": 50, "Internet of Things": 52, "Cloud Computing": 48 } },
+                    { student: "Hannah Abbott", scores: { "Data Science": 60, "Cryptography": 55, "Entrepreneurship": 59, "Internet of Things": 60, "Cloud Computing": 62 } },
+                    { student: "Ian Malcolm", scores: { "Data Science": 35, "Cryptography": 45, "Entrepreneurship": 46, "Internet of Things": 40, "Cloud Computing": 38 } },
+                    { student: "Oliver Twist", scores: { "Data Science": 40, "Cryptography": 50, "Entrepreneurship": 45, "Internet of Things": 48, "Cloud Computing": 45 } },
+                    { student: "Peter Parker", scores: { "Data Science": 45, "Cryptography": 48, "Entrepreneurship": 50, "Internet of Things": 55, "Cloud Computing": 60 } },
+                    { student: "Bruce Wayne", scores: { "Data Science": 50, "Cryptography": 48, "Entrepreneurship": 55, "Internet of Things": 60, "Cloud Computing": 55 } }
+                ]
+            },
+            students: {
+                strong: [
+                    { name: "Bob Smith", avg: 91.4, attendance: 92.0 },
+                    { name: "Evan Wright", avg: 94.2, attendance: 95.5 },
+                    { name: "Diana Prince", avg: 87.4, attendance: 88.0 },
+                    { name: "Tina Lewis", avg: 81.8, attendance: 100.0 },
+                    { name: "Alice Johnson", avg: 81.2, attendance: 95.0 }
+                ],
+                weak: [
+                    { name: "Charlie Davis", avg: 50.6, attendance: 65.0 },
+                    { name: "Frank Castle", avg: 50.2, attendance: 60.0 },
+                    { name: "Gregory House", avg: 49.0, attendance: 55.0 },
+                    { name: "Hannah Abbott", avg: 59.2, attendance: 70.0 },
+                    { name: "Ian Malcolm", avg: 40.8, attendance: 40.0 },
+                    { name: "Oliver Twist", avg: 45.6, attendance: 45.0 },
+                    { name: "Peter Parker", avg: 51.6, attendance: 62.0 },
+                    { name: "Bruce Wayne", avg: 53.6, attendance: 50.0 }
+                ],
+                category_counts: { "High Performer": 5, "Average Performer": 0, "Needs Improvement": 8 },
+                term_trend: { "Term 1": 74.5, "Term 2": 76.2, "Term 3": 78.9 }
+            },
+            teachers: {
+                teacher_metrics: [
+                    { teacher: "Mr. Patel", subject: "Data Science", style: "Visual", overall_rating: 75.2, suggestion: "Good results, but consider blending practical labs with your Visual style." },
+                    { teacher: "Mr. Iyer", subject: "Cryptography", style: "Blended", overall_rating: 82.0, suggestion: "Highly effective Blended learning approach. Keep up the excellent work!" },
+                    { teacher: "Ms. Carter", subject: "Entrepreneurship", style: "Auditory", overall_rating: 70.0, suggestion: "Average results. Students might benefit from more interactive discussions." },
+                    { teacher: "Dr. Connors", subject: "Internet of Things", style: "Kinesthetic", overall_rating: 64.5, suggestion: "Hands-on labs are great, but integrate more theory to boost weak foundations." },
+                    { teacher: "Prof. Xavier", subject: "Cloud Computing", style: "Blended", overall_rating: 85.0, suggestion: "Excellent balance of practice and theory. Top performing subject." }
+                ],
+                style_averages: { "Blended": 83.5, "Kinesthetic": 64.5, "Visual": 75.2, "Auditory": 70.0, "Reading/Writing": "-" }
+            }
+        };
+
+        // --- FETCH API LOGIC ---
+        async function safeFetch(url, mockKey) {
+            try {
+                // Aggressive Cache Busting
+                const separator = url.includes('?') ? '&' : '?';
+                const cacheBuster = `t=${new Date().getTime()}`;
+                const targetUrl = `${API_BASE_URL}${url}${separator}${cacheBuster}`;
+                
+                const response = await fetch(targetUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.warn(`Backend unreachable for ${url}. Loading local fallback.`, error);
+                return JSON.parse(JSON.stringify(mockData[mockKey])); 
+            }
+        }
+
+        // --- CHECK DB CONNECTION ---
+        async function checkBackendStatus() {
+            const statusEl = document.getElementById('backendStatus');
+            if(!statusEl) return;
+            try {
+                const targetUrl = `${API_BASE_URL}/api/heatmap_data`;
+                const response = await fetch(targetUrl);
+                if(response.ok) {
+                    statusEl.className = "hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold border border-emerald-100 dark:border-emerald-500/20 transition-colors";
+                    statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span> Live DB Connected';
+                } else throw new Error();
+            } catch(e) {
+                statusEl.className = "hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold border border-amber-100 dark:border-amber-500/20 transition-colors";
+                statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span> Local Mode (DB Offline)';
+            }
+        }
+
+        // --- INITIALIZATION ---
+        window.onload = async () => {
+            if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                const toggle = document.getElementById('darkModeToggle');
+                if (toggle) toggle.checked = true;
+                updateChartColors(true);
+            }
+            await checkBackendStatus();
+            const selectedTerms = Array.from(document.querySelectorAll('.term-filter:checked')).map(cb => cb.value);
+            const selectedPerf = Array.from(document.querySelectorAll('.perf-filter:checked')).map(cb => cb.value);
+            const selectedStyles = Array.from(document.querySelectorAll('.style-filter:checked')).map(cb => cb.value);
+            await loadDashboard(selectedTerms, selectedPerf, selectedStyles);
+            setupInteractions();
+        };
+
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', isDark);
+            updateChartColors(isDark);
+            showToast(isDark ? 'Dark mode enabled' : 'Dark mode disabled', 'success');
+        }
+
+        function updateChartColors(isDark) {
+            const textColor = isDark ? '#cbd5e1' : '#64748b';
+            const gridColor = isDark ? 'rgba(51, 65, 85, 0.5)' : 'rgba(226, 232, 240, 0.5)';
+            Chart.defaults.color = textColor;
+            Chart.defaults.scale.grid.color = gridColor;
+            Object.values(window.appCharts).forEach(chart => {
+                if (chart && chart.options && chart.options.scales) {
+                    if (chart.options.scales.x) {
+                        chart.options.scales.x.ticks = chart.options.scales.x.ticks || {};
+                        chart.options.scales.x.ticks.color = textColor;
+                        if (chart.options.scales.x.grid) chart.options.scales.x.grid.color = gridColor;
+                    }
+                    if (chart.options.scales.y) {
+                        chart.options.scales.y.ticks = chart.options.scales.y.ticks || {};
+                        chart.options.scales.y.ticks.color = textColor;
+                        if (chart.options.scales.y.grid) chart.options.scales.y.grid.color = gridColor;
+                    }
+                    chart.update();
+                }
+            });
+        }
+
+        async function loadDashboard(selectedTerms = [], selectedPerf = ['Top', 'Average', 'Weak'], selectedStyles = ["Visual", "Blended", "Auditory", "Kinesthetic", "Reading/Writing"]) {
+            const queryString = selectedTerms.length > 0 ? `?terms=${encodeURIComponent(selectedTerms.join(','))}` : '';
+            
+            const [heatmapData, studentsData, teachersData] = await Promise.all([
+                safeFetch(`/api/heatmap_data${queryString}`, 'heatmap'),
+                safeFetch(`/api/student_analysis${queryString}`, 'students'),
+                safeFetch(`/api/teaching_style${queryString}`, 'teachers')
+            ]);
+
+            if (notificationsRead) document.getElementById('notificationBadge')?.classList.add('hidden');
+
+            currentLiveData = { heatmap: JSON.parse(JSON.stringify(heatmapData)), students: JSON.parse(JSON.stringify(studentsData)), teachers: JSON.parse(JSON.stringify(teachersData)) };
+
+            let renderData = { heatmap: JSON.parse(JSON.stringify(heatmapData)), students: JSON.parse(JSON.stringify(studentsData)), teachers: JSON.parse(JSON.stringify(teachersData)) };
+
+            if (!selectedPerf.includes('Top')) renderData.students.strong = [];
+            if (!selectedPerf.includes('Weak')) renderData.students.weak = [];
+            const newCounts = {};
+            if (selectedPerf.includes('Top')) newCounts['High Performer'] = renderData.students.category_counts['High Performer'] || 0;
+            if (selectedPerf.includes('Average')) newCounts['Average Performer'] = renderData.students.category_counts['Average Performer'] || 0;
+            if (selectedPerf.includes('Weak')) newCounts['Needs Improvement'] = renderData.students.category_counts['Needs Improvement'] || 0;
+            renderData.students.category_counts = newCounts;
+
+            renderData.heatmap.matrix = renderData.heatmap.matrix.filter(row => {
+                let total = 0, count = 0; Object.values(row.scores).forEach(sc => { if (typeof sc === 'number') { total += sc; count++; } });
+                const avg = count > 0 ? (total/count) : 0;
+                if (avg >= 80 && selectedPerf.includes('Top')) return true;
+                if (avg >= 60 && avg < 80 && selectedPerf.includes('Average')) return true;
+                if (avg < 60 && selectedPerf.includes('Weak')) return true;
+                return false;
+            });
+            
+            if (renderData.students.learning_profiles) {
+                renderData.students.learning_profiles = renderData.students.learning_profiles.filter(prof => { return !!renderData.heatmap.matrix.find(r => r.student === prof.student); });
+            }
+
+            if (selectedStyles && selectedStyles.length > 0 && renderData.teachers.teacher_metrics) {
+                renderData.teachers.teacher_metrics = renderData.teachers.teacher_metrics.filter(t => selectedStyles.includes(t.style));
+                const newStyleAvgs = {};
+                Object.keys(renderData.teachers.style_averages).forEach(st => { if (selectedStyles.includes(st)) newStyleAvgs[st] = renderData.teachers.style_averages[st]; });
+                renderData.teachers.style_averages = newStyleAvgs;
+            }
+
+            renderHeatmap(renderData.heatmap);
+            renderStudentAnalysis(renderData.students, selectedTerms, selectedStyles);
+            renderTeachingStyle(renderData.teachers);
+            buildSearchIndex();
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function renderHeatmap(data) {
+            const header = document.getElementById('heatmap-header');
+            while(header.children.length > 1) { header.removeChild(header.lastChild); }
+            data.subjects.forEach(sub => {
+                const th = document.createElement('th'); th.className = "p-4 font-bold text-center border-l border-slate-200 bg-slate-50"; th.innerText = sub;
+                header.appendChild(th);
+            });
+            const tbody = document.getElementById('heatmap-body'); tbody.innerHTML = '';
+            
+            data.matrix.forEach(row => {
+                const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 transition-colors group";
+                const tdName = document.createElement('td'); const safeName = row.student.replace(/'/g, "\\'");
+                tdName.className = "p-4 font-semibold text-slate-700 sticky left-0 bg-white group-hover:bg-slate-50 transition-colors border-r border-slate-100 cursor-pointer hover:text-primary-600";
+                tdName.onclick = () => openDetailsModal(row.student, 'Student');
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(row.student)}&background=random&color=fff&size=32`;
+                tdName.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <div class="flex items-center gap-3"><img src="${avatarUrl}" class="w-8 h-8 rounded-full shadow-sm"> <span>${row.student}</span></div>
+                        <button onclick="editEntity(event, '${safeName}', 'Student')" class="text-slate-300 hover:text-primary-500 p-1.5 rounded-lg hover:bg-primary-50 dark:hover:bg-slate-700 transition-colors" title="Edit Name"><i class="ph ph-pencil-simple text-lg"></i></button>
+                    </div>`;
+                tr.appendChild(tdName);
+                data.subjects.forEach(sub => {
+                    const score = row.scores[sub], tdScore = document.createElement('td');
+                    tdScore.className = `p-3 text-center border-l border-slate-100`;
+                    const style = getScoreStyles(score);
+                    tdScore.innerHTML = `<span class="score-pill ${style.bg} ${style.text}">${score}</span>`;
+                    tr.appendChild(tdScore);
+                });
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderStudentAnalysis(data, selectedTerms = []) {
+            const weakList = document.getElementById('weak-list'); 
+            document.getElementById('weak-count').innerText = data.weak ? data.weak.length : 0;
+            weakList.innerHTML = ''; 
+            if(!data.weak || data.weak.length === 0) weakList.innerHTML = "<li class='py-3 text-slate-400 text-sm text-center'>No matching students.</li>";
+            else data.weak.forEach(s => {
+                const safeName = s.name.replace(/'/g, "\\'");
+                weakList.innerHTML += `<li class="p-3 bg-white border border-slate-100 rounded-2xl hover:shadow-md transition-shadow cursor-pointer" onclick="openDetailsModal('${safeName}', 'Student')"><div class="flex justify-between items-center mb-2"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-xs">${s.name.charAt(0)}</div><div><div class="flex items-center gap-2"><p class="font-bold text-sm text-slate-800 dark:text-slate-200">${s.name}</p><button onclick="editEntity(event, '${safeName}', 'Student')" class="text-slate-300 hover:text-primary-500 transition-colors"><i class="ph ph-pencil-simple"></i></button></div><p class="text-[0.65rem] text-slate-500 uppercase tracking-wide">Att: ${s.attendance}%</p></div></div><span class="text-rose-600 font-bold text-sm">${s.avg}%</span></div><div class="w-full bg-slate-100 rounded-full h-1.5"><div class="bg-rose-500 h-1.5 rounded-full" style="width: ${Math.min(s.avg, 100)}%"></div></div></li>`;
+            });
+
+            const strongList = document.getElementById('strong-list'); 
+            document.getElementById('strong-count').innerText = data.strong ? data.strong.length : 0;
+            strongList.innerHTML = ''; 
+            if(!data.strong || data.strong.length === 0) strongList.innerHTML = "<li class='py-3 text-slate-400 text-sm text-center'>No matching students.</li>";
+            else data.strong.forEach(s => {
+                const safeName = s.name.replace(/'/g, "\\'");
+                strongList.innerHTML += `<li class="p-3 bg-white border border-slate-100 rounded-2xl hover:shadow-md transition-shadow cursor-pointer" onclick="openDetailsModal('${safeName}', 'Student')"><div class="flex justify-between items-center mb-2"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-xs">${s.name.charAt(0)}</div><div><div class="flex items-center gap-2"><p class="font-bold text-sm text-slate-800 dark:text-slate-200">${s.name}</p><button onclick="editEntity(event, '${safeName}', 'Student')" class="text-slate-300 hover:text-primary-500 transition-colors"><i class="ph ph-pencil-simple"></i></button></div><p class="text-[0.65rem] text-slate-500 uppercase tracking-wide">Att: ${s.attendance}%</p></div></div><span class="text-emerald-600 font-bold text-sm">${s.avg}%</span></div><div class="w-full bg-slate-100 rounded-full h-1.5"><div class="bg-emerald-500 h-1.5 rounded-full" style="width: ${Math.min(s.avg, 100)}%"></div></div></li>`;
+            });
+
+            const attCtx = document.getElementById('attendanceChart').getContext('2d');
+            if (window.appCharts.attendance) window.appCharts.attendance.destroy();
+            const attData = [...(data.strong || []), ...(data.weak || [])];
+            window.appCharts.attendance = new Chart(attCtx, {
+                type: 'scatter', data: { datasets: [{ label: 'Students', data: attData.map(s => ({x: s.attendance, y: s.avg, name: s.name})), backgroundColor: '#6366f1', borderColor: '#ffffff', borderWidth: 2, pointRadius: 6, pointHoverRadius: 8 }] },
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw.name}: ${ctx.raw.y}% Avg` } } }, scales: { x: { grid: {display: false}, title: {display: true, text: 'Attendance (%)'} }, y: { border: {dash: [4, 4]}, title: {display: true, text: 'Avg Marks'} } } }
+            });
+
+            const catCtx = document.getElementById('categoryChart').getContext('2d');
+            const categoryLabels = { "Top Performers": data.category_counts["High Performer"] ?? 0, "Average": data.category_counts["Average Performer"] ?? 0, "Needs Attention": data.category_counts["Needs Improvement"] ?? 0 };
+            if (window.appCharts.category) window.appCharts.category.destroy();
+            window.appCharts.category = new Chart(catCtx, {
+                type: 'doughnut', data: { labels: Object.keys(categoryLabels), datasets: [{ data: Object.values(categoryLabels), backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'], borderWidth: 0, hoverOffset: 4 }] },
+                options: { maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } } }
+            });
+
+            const termCtx = document.getElementById('termTrendChart').getContext('2d');
+            const gradient = termCtx.createLinearGradient(0, 0, 0, 400); gradient.addColorStop(0, 'rgba(99, 102, 241, 0.4)'); gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+            if (window.appCharts.termTrend) window.appCharts.termTrend.destroy();
+            let filteredTermTrend = { ...data.term_trend };
+            if (selectedTerms && selectedTerms.length > 0) { filteredTermTrend = {}; Object.keys(data.term_trend || {}).forEach(key => { if (selectedTerms.some(term => key.includes(term))) filteredTermTrend[key] = data.term_trend[key]; }); }
+            window.appCharts.termTrend = new Chart(termCtx, {
+                type: 'line', data: { labels: Object.keys(filteredTermTrend), datasets: [{ label: 'Class Average', data: Object.values(filteredTermTrend), borderColor: '#6366f1', backgroundColor: gradient, borderWidth: 3, tension: 0.4, fill: true, pointBackgroundColor: '#ffffff', pointBorderColor: '#6366f1', pointBorderWidth: 2, pointRadius: 5, pointHoverRadius: 7 }] },
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { border: {dash: [4, 4]}, min: 60 } } }
+            });
+
+            const affinityHeader = document.getElementById('affinity-header'), affinityBody = document.getElementById('affinity-body');
+            const selectedStyles = Array.from(document.querySelectorAll('.style-filter:checked')).map(cb => cb.value);
+            const allStyles = selectedStyles.length > 0 ? selectedStyles : ["Visual", "Blended", "Auditory", "Kinesthetic", "Reading/Writing"];
+            while(affinityHeader.children.length > 1) { affinityHeader.removeChild(affinityHeader.lastChild); }
+            affinityBody.innerHTML = '';
+            allStyles.forEach(style => { const th = document.createElement('th'); th.className = "p-4 font-bold text-center border-l border-slate-200 bg-slate-50"; th.innerText = style; affinityHeader.appendChild(th); });
+
+            (data.learning_profiles || []).forEach(row => {
+                const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 transition-colors group";
+                const tdName = document.createElement('td'); const safeName = row.student.replace(/'/g, "\\'");
+                tdName.className = "p-4 font-semibold text-slate-700 sticky left-0 bg-white group-hover:bg-slate-50 transition-colors border-r border-slate-100 cursor-pointer hover:text-primary-600";
+                tdName.onclick = () => openDetailsModal(row.student, 'Student');
+                tdName.innerHTML = `<div class="flex items-center justify-between w-full"><div class="flex items-center gap-3"><img src="https://ui-avatars.com/api/?name=${encodeURIComponent(row.student)}&background=random&color=fff&size=32" class="w-8 h-8 rounded-full shadow-sm"><span>${row.student}</span></div><button onclick="editEntity(event, '${safeName}', 'Student')" class="text-slate-300 hover:text-primary-500 p-1.5 rounded-lg hover:bg-primary-50 dark:hover:bg-slate-700 transition-colors"><i class="ph ph-pencil-simple text-lg"></i></button></div>`;
+                tr.appendChild(tdName);
+                allStyles.forEach(style => {
+                    const score = row.scores[style] || '-', tdScore = document.createElement('td'); tdScore.className = `p-3 text-center border-l border-slate-100`;
+                    const styleClass = getScoreStyles(score); tdScore.innerHTML = `<span class="score-pill ${styleClass.bg} ${styleClass.text}">${score}</span>`;
+                    tr.appendChild(tdScore);
+                });
+                affinityBody.appendChild(tr);
+            });
+        }
+
+        function renderTeachingStyle(data) {
+            const cardsContainer = document.getElementById('teacher-cards'); cardsContainer.innerHTML = '';
+            const styleColors = { 'Visual': { bg: 'bg-indigo-50', text: 'text-indigo-700', icon: 'ph-eye' }, 'Blended': { bg: 'bg-purple-50', text: 'text-purple-700', icon: 'ph-intersect' }, 'Kinesthetic': { bg: 'bg-emerald-50', text: 'text-emerald-700', icon: 'ph-hand-pointing' }, 'Auditory': { bg: 'bg-amber-50', text: 'text-amber-700', icon: 'ph-ear' }, 'Reading/Writing': { bg: 'bg-blue-50', text: 'text-blue-700', icon: 'ph-book-open' } };
+
+            (data.teacher_metrics || []).forEach(t => {
+                const theme = styleColors[t.style] || styleColors['Blended']; const safeName = t.teacher.replace(/'/g, "\\'");
+                let suggestionBox = '';
+                if (t.overall_rating < 68) suggestionBox = `<div class="bg-rose-50 p-5 rounded-2xl border border-rose-200 relative mt-auto"><i class="ph-fill ph-warning-circle text-rose-500 text-3xl absolute -top-3 -left-2 bg-white rounded-full"></i><p class="text-sm font-bold text-rose-800 leading-relaxed ml-2 relative z-10">Critical Action Required</p><p class="text-xs font-medium text-rose-700 ml-2 mt-1 relative z-10">Class average is below the 68% benchmark. Organize remedial sessions.</p></div>`;
+                else if (t.overall_rating >= 80) suggestionBox = `<div class="bg-emerald-50 p-5 rounded-2xl border border-emerald-100 relative mt-auto"><i class="ph-fill ph-star text-emerald-400 text-3xl absolute -top-3 -left-2 bg-white rounded-full"></i><p class="text-sm font-medium text-emerald-800 leading-relaxed ml-2 relative z-10">${t.suggestion}</p></div>`;
+                else suggestionBox = `<div class="bg-amber-50 p-5 rounded-2xl border border-amber-100 relative mt-auto"><i class="ph-fill ph-lightbulb text-amber-400 text-3xl absolute -top-3 -left-2 bg-white rounded-full"></i><p class="text-sm font-medium text-amber-800 leading-relaxed ml-2 relative z-10">${t.suggestion}</p></div>`;
+
+                cardsContainer.innerHTML += `
+                <div class="bg-white border border-slate-200 rounded-3xl p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 relative overflow-hidden flex flex-col h-full cursor-pointer" onclick="openDetailsModal('${safeName}', 'Teacher')">
+                    <div class="absolute top-0 left-0 w-full h-1 ${theme.bg.replace('50', '500')}"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-2xl ${theme.bg} ${theme.text} flex items-center justify-center text-xl"><i class="ph-fill ${theme.icon}"></i></div>
+                            <div><div class="flex items-center gap-2"><h3 class="font-bold text-lg text-slate-800 dark:text-slate-100">${t.teacher}</h3><button onclick="editEntity(event, '${safeName}', 'Teacher')" class="text-slate-300 hover:text-primary-500"><i class="ph ph-pencil-simple"></i></button></div><p class="text-sm text-slate-500">${t.subject}</p></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mb-5 bg-slate-50 p-3 rounded-2xl border border-slate-100"><span class="text-xs font-bold uppercase text-slate-500">Methodology</span><span class="text-xs font-bold px-3 py-1 rounded-full ${theme.bg} ${theme.text}">${t.style}</span></div>
+                    <div class="mb-5"><div class="flex justify-between items-end mb-1"><span class="text-sm text-slate-500 font-medium">Class Average</span><span class="text-2xl font-black ${t.overall_rating < 68 ? 'text-rose-600' : 'text-slate-800'}">${t.overall_rating}</span></div><div class="w-full bg-slate-100 rounded-full h-2"><div class="${t.overall_rating < 68 ? 'bg-rose-500' : theme.bg.replace('50', '500')} h-2 rounded-full" style="width: ${t.overall_rating}%"></div></div></div>
+                    ${suggestionBox}
+                </div>`;
+            });
+
+            const styleCtx = document.getElementById('teachingStyleChart').getContext('2d');
+            const barGradient = styleCtx.createLinearGradient(0, 0, 0, 400); barGradient.addColorStop(0, '#8b5cf6'); barGradient.addColorStop(1, '#6366f1'); 
+            if (window.appCharts.teachingStyle) window.appCharts.teachingStyle.destroy();
+            window.appCharts.teachingStyle = new Chart(styleCtx, {
+                type: 'bar', data: { labels: Object.keys(data.style_averages || {}), datasets: [{ label: 'Global Average Score', data: Object.values(data.style_averages || {}), backgroundColor: barGradient, borderRadius: 8, barPercentage: 0.6 }] },
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { border: {dash: [4, 4]}, title: {display: true, text: 'Average Score'} } } }
+            });
+        }
+
+        // --- GLOBAL UI & INTERACTION HELPERS ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            const buttons = [{id: 'tab-heatmap', icon: 'ph-squares-four'}, {id: 'tab-students', icon: 'ph-users'}, {id: 'tab-teachers', icon: 'ph-chalkboard-teacher'}];
+            buttons.forEach(btn => {
+                const el = document.getElementById(btn.id); el.setAttribute('aria-selected', 'false');
+                el.className = `relative flex-1 lg:flex-none py-2.5 px-6 rounded-xl text-sm font-semibold transition-all duration-300 text-slate-500 hover:text-slate-800 hover:bg-white/50 whitespace-nowrap flex items-center gap-2`; el.innerHTML = `<i class="ph ${btn.icon} text-lg"></i> ${el.innerText.trim()}`;
+            });
+            document.getElementById('sec-' + tabId).classList.add('active');
+            const activeBtn = document.getElementById('tab-' + tabId); activeBtn.setAttribute('aria-selected', 'true');
+            activeBtn.className = `relative flex-1 lg:flex-none py-2.5 px-6 rounded-xl text-sm font-semibold transition-all duration-300 text-primary-700 bg-white shadow-sm whitespace-nowrap flex items-center gap-2`;
+            activeBtn.innerHTML = `<i class="ph ${buttons.find(b => b.id === 'tab-' + tabId).icon} text-lg"></i> ${activeBtn.innerText.trim()}`;
+            setTimeout(() => { if (window.appCharts) Object.values(window.appCharts).forEach(chart => { if (chart && typeof chart.resize === 'function') chart.resize(); }); }, 50);
+        }
+
+        function getScoreStyles(score) {
+            if (score === '-' || score === "") return { bg: 'bg-slate-100', text: 'text-slate-400 border-slate-200 border' };
+            if (score >= 80) return { bg: 'bg-emerald-100', text: 'text-emerald-700 border-emerald-200 border' };
+            if (score >= 60) return { bg: 'bg-amber-100', text: 'text-amber-700 border-amber-200 border' };
+            return { bg: 'bg-rose-100', text: 'text-rose-700 border-rose-200 border' };
+        }
+
+        function buildSearchIndex() {
+            searchIndex = [];
+            const allStudents = [...(currentLiveData.students.strong || []), ...(currentLiveData.students.weak || [])];
+            if (currentLiveData.heatmap && currentLiveData.heatmap.matrix) {
+                currentLiveData.heatmap.matrix.forEach(r => {
+                    let stats = allStudents.find(s => s.name === r.student);
+                    if (!stats) {
+                        let total = 0, count = 0; Object.values(r.scores).forEach(sc => { if (typeof sc === 'number') { total += sc; count++; } });
+                        stats = { avg: count > 0 ? (total/count).toFixed(1) : 'N/A', attendance: 85.0 };
+                    }
+                    searchIndex.push({ name: r.student, type: 'Student', icon: 'ph-user', meta: `Avg: ${stats.avg}% • Att: ${stats.attendance}%` });
+                });
+            }
+            if (currentLiveData.teachers && currentLiveData.teachers.teacher_metrics) {
+                currentLiveData.teachers.teacher_metrics.forEach(t => searchIndex.push({ name: t.teacher, type: 'Teacher', icon: 'ph-chalkboard-teacher', meta: t.subject }));
+            }
+            if (currentLiveData.heatmap && currentLiveData.heatmap.subjects) {
+                currentLiveData.heatmap.subjects.forEach(s => searchIndex.push({ name: s, type: 'Subject', icon: 'ph-book-open' }));
+            }
+        }
+
+        function editEntity(e, name, type) {
+            e.stopPropagation(); openDetailsModal(name, type); setTimeout(() => enableNameEdit(name, type), 100);
+        }
+
+        function enableNameEdit(entityName, entityType) {
+            const span = document.getElementById('entityNameSpan'); if(!span) return;
+            const safeName = entityName.replace(/'/g, "\\'");
+            span.parentElement.innerHTML = `
+                <input type="text" id="editNameInput" value="${entityName}" class="px-2 py-0.5 text-xl font-bold border-b-2 border-primary-500 focus:outline-none bg-transparent text-slate-800 dark:text-white w-48">
+                <button onclick="saveNameEdit('${safeName}', '${entityType}')" class="text-emerald-500 hover:text-emerald-600 p-1 ml-1" title="Save"><i class="ph-fill ph-check-circle text-xl"></i></button>
+                <button onclick="openDetailsModal('${safeName}', '${entityType}')" class="text-slate-400 hover:text-rose-500 p-1" title="Cancel"><i class="ph-fill ph-x-circle text-xl"></i></button>`;
+            const input = document.getElementById('editNameInput'); input.focus(); input.select();
+            input.addEventListener('keypress', function (e) { if (e.key === 'Enter') saveNameEdit(entityName, entityType); });
+        }
+
+        function enableScoreEdit(entityName) {
+            const container = document.getElementById('studentSubjectsContainer'); if (!container) return;
+            const hm = currentLiveData.heatmap.matrix.find(r => r.student === entityName) || {scores:{}};
+            let editHtml = '';
+            Object.keys(hm.scores).forEach(sub => {
+                const sc = hm.scores[sub] === '-' ? '' : hm.scores[sub];
+                editHtml += `
+                    <div class="flex justify-between items-center p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <span class="font-medium text-slate-700 dark:text-slate-300 text-sm flex-1 truncate pr-2" title="${sub}">${sub}</span>
+                        <input type="number" data-subject="${sub}" value="${sc}" class="edit-score-input w-20 px-2 py-1.5 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none transition-all text-sm text-center font-bold text-slate-800" placeholder="-" min="0" max="100">
+                    </div>`;
+            });
+            const safeName = entityName.replace(/'/g, "\\'"); container.innerHTML = editHtml;
+            document.getElementById('scoreEditBtnContainer').innerHTML = `
+                <button onclick="saveScoreEdit('${safeName}')" class="text-emerald-500 hover:text-emerald-600 p-1 mr-1"><i class="ph-fill ph-check-circle text-xl"></i></button>
+                <button onclick="openDetailsModal('${safeName}', 'Student')" class="text-slate-400 hover:text-rose-500 p-1"><i class="ph-fill ph-x-circle text-xl"></i></button>`;
+        }
+
+        // --- NEW: ERROR HANDLING FOR FETCH SAVES ---
+        async function saveScoreEdit(entityName) {
+            const scoresPayload = {};
+            document.querySelectorAll('.edit-score-input').forEach(input => {
+                const sub = input.getAttribute('data-subject'), val = input.value.trim(), numVal = val === '' ? '-' : parseFloat(val);
+                scoresPayload[sub] = numVal;
+            });
+
+            try {
+                const targetUrl = `${API_BASE_URL}/api/edit_scores`;
+                const response = await fetch(targetUrl, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ student: entityName, scores: scoresPayload }) });
+                
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.message || "Failed to update Excel DB.");
+                }
+                showToast(response.message || 'Scores saved successfully to Excel!', 'success');
+                
+            } catch (e) { 
+                console.error(e);
+                showToast(e.message === "Failed to fetch" ? "Backend Server is Offline." : `Error: ${e.message}`, 'error');
+                return; // Stop execution on hard error so user can fix Excel lock/module
+            }
+
+            const selectedTerms = Array.from(document.querySelectorAll('.term-filter:checked')).map(cb => cb.value), selectedPerf = Array.from(document.querySelectorAll('.perf-filter:checked')).map(cb => cb.value), selectedStyles = Array.from(document.querySelectorAll('.style-filter:checked')).map(cb => cb.value);
+            await loadDashboard(selectedTerms, selectedPerf, selectedStyles); openDetailsModal(entityName, 'Student');
+        }
+
+        async function saveNameEdit(oldName, entityType) {
+            const newName = document.getElementById('editNameInput').value.trim();
+            if (!newName || newName === oldName) return openDetailsModal(oldName, entityType);
+
+            try {
+                const targetUrl = `${API_BASE_URL}/api/edit_name`;
+                const response = await fetch(targetUrl, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ oldName: oldName, newName: newName, entityType: entityType }) });
+                
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.message || "Failed to update Excel DB.");
+                }
+                showToast(response.message || `${entityType} renamed and saved to Excel!`, 'success');
+                
+            } catch (e) { 
+                console.error(e);
+                showToast(e.message === "Failed to fetch" ? "Backend Server is Offline." : `Error: ${e.message}`, 'error');
+                return; // Stop execution on hard error so user can fix Excel lock/module
+            }
+
+            const selectedTerms = Array.from(document.querySelectorAll('.term-filter:checked')).map(cb => cb.value), selectedPerf = Array.from(document.querySelectorAll('.perf-filter:checked')).map(cb => cb.value), selectedStyles = Array.from(document.querySelectorAll('.style-filter:checked')).map(cb => cb.value);
+            await loadDashboard(selectedTerms, selectedPerf, selectedStyles); openDetailsModal(newName, entityType);
+        }
+
+        function openDetailsModal(entityName, entityType) {
+            const modal = document.getElementById('entityModal'), title = document.getElementById('modalTitle'), body = document.getElementById('modalBody');
+            document.getElementById('searchDropdown').classList.add('hidden'); body.innerHTML = '';
+            const safeName = entityName.replace(/'/g, "\\'");
+
+            if (entityType === 'Student') {
+                title.innerHTML = `
+                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(entityName)}&background=6366f1&color=fff&size=40" class="w-10 h-10 rounded-xl shadow-sm">
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2">
+                            <span id="entityNameSpan" class="leading-none text-slate-800 dark:text-white text-xl font-bold">${entityName}</span>
+                            <button onclick="enableNameEdit('${safeName}', 'Student')" class="text-slate-400 hover:text-primary-500 bg-slate-100 dark:bg-slate-700/50 p-1.5 rounded-lg" title="Edit Name"><i class="ph ph-pencil-simple text-sm"></i></button>
+                        </div>
+                        <span class="text-xs font-medium text-primary-600 mt-1 uppercase tracking-wider">Student Profile</span>
+                    </div>`;
+                
+                const liveStudents = [...(currentLiveData.students.strong || []), ...(currentLiveData.students.weak || [])];
+                let studentInfo = liveStudents.find(s => s.name === entityName);
+                const hm = currentLiveData.heatmap.matrix.find(r => r.student === entityName) || {scores:{}}, prof = (currentLiveData.students.learning_profiles || []).find(p => p.student === entityName) || {scores:{}};
+
+                if (!studentInfo) {
+                    let total = 0, count = 0; Object.values(hm.scores).forEach(sc => { if (typeof sc === 'number') { total += sc; count++; } });
+                    studentInfo = { avg: count > 0 ? (total/count).toFixed(1) : 'N/A', attendance: 85.0 };
+                }
+
+                let subHtml = ''; Object.keys(hm.scores).forEach(sub => { const sc = hm.scores[sub], st = getScoreStyles(sc); subHtml += `<div class="flex justify-between items-center p-3 bg-white rounded-xl border border-slate-100 shadow-sm"><span class="font-medium text-slate-700 text-sm">${sub}</span><span class="score-pill ${st.bg} ${st.text}">${sc}</span></div>`; });
+                let styleHtml = ''; Object.keys(prof.scores).forEach(st => { const sc = prof.scores[st], sty = getScoreStyles(sc); styleHtml += `<div class="flex justify-between items-center p-3 bg-white rounded-xl border border-slate-100 shadow-sm"><span class="font-medium text-slate-700 text-sm">${st}</span><span class="score-pill ${sty.bg} ${sty.text}">${sc}</span></div>`; });
+
+                body.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-gradient-to-br from-indigo-50 to-white p-5 rounded-2xl border border-indigo-100 shadow-sm flex flex-col items-center justify-center">
+                            <span class="text-sm text-slate-500 font-semibold uppercase tracking-wide mb-1">Overall Avg</span><span class="text-3xl font-black text-indigo-600">${studentInfo.avg}%</span>
+                        </div>
+                        <div class="bg-gradient-to-br from-emerald-50 to-white p-5 rounded-2xl border border-emerald-100 shadow-sm flex flex-col items-center justify-center">
+                            <span class="text-sm text-slate-500 font-semibold uppercase tracking-wide mb-1">Attendance</span><span class="text-3xl font-black text-emerald-600">${studentInfo.attendance}%</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><i class="ph-fill ph-books text-primary-500 text-lg"></i> Subject Performance</h4>
+                        <div id="scoreEditBtnContainer"><button onclick="enableScoreEdit('${safeName}')" class="text-slate-400 hover:text-primary-500 bg-slate-100 dark:bg-slate-700/50 p-1.5 rounded-lg" title="Edit Scores"><i class="ph ph-pencil-simple text-sm"></i></button></div>
+                    </div>
+                    <div id="studentSubjectsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">${subHtml}</div>
+                    <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2"><i class="ph-fill ph-brain text-purple-500 text-lg"></i> Learning Style Affinity</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${styleHtml}</div>`;
+            } 
+            else if (entityType === 'Teacher') {
+                const tData = currentLiveData.teachers.teacher_metrics.find(t => t.teacher === entityName);
+                title.innerHTML = `
+                    <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-2xl shadow-sm"><i class="ph-fill ph-chalkboard-teacher"></i></div>
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2">
+                            <span id="entityNameSpan" class="leading-none text-slate-800 dark:text-white text-xl font-bold">${entityName}</span>
+                            <button onclick="enableNameEdit('${safeName}', 'Teacher')" class="text-slate-400 hover:text-primary-500 bg-slate-100 dark:bg-slate-700/50 p-1.5 rounded-lg" title="Edit Name"><i class="ph ph-pencil-simple text-sm"></i></button>
+                        </div>
+                        <span class="text-xs font-medium text-purple-600 mt-1 uppercase tracking-wider">Faculty Profile</span>
+                    </div>`;
+                
+                let suggestionBox = '';
+                if (tData.overall_rating < 68) suggestionBox = `<div class="bg-rose-50 p-5 rounded-2xl border border-rose-200 relative"><i class="ph-fill ph-warning-circle text-rose-500 text-3xl absolute -top-3 -left-2 bg-white rounded-full"></i><p class="text-sm font-bold text-rose-800 leading-relaxed ml-2 relative z-10">Critical Action Required</p><p class="text-xs font-medium text-rose-700 ml-2 mt-1 relative z-10">Class average is below the benchmark.</p></div>`;
+                else if (tData.overall_rating >= 80) suggestionBox = `<div class="bg-emerald-50 p-5 rounded-2xl border border-emerald-100 relative"><i class="ph-fill ph-star text-emerald-400 text-3xl absolute -top-3 -left-2 bg-white rounded-full"></i><p class="text-sm font-medium text-emerald-800 leading-relaxed ml-2 relative z-10">${tData.suggestion}</p></div>`;
+                else suggestionBox = `<div class="bg-amber-50 p-5 rounded-2xl border border-amber-100 relative"><i class="ph-fill ph-lightbulb text-amber-400 text-3xl absolute -top-3 -left-2 bg-white rounded-full"></i><p class="text-sm font-medium text-amber-800 leading-relaxed ml-2 relative z-10">${tData.suggestion}</p></div>`;
+
+                body.innerHTML = `
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Subject Taught</p><p class="text-lg font-bold text-slate-800">${tData.subject}</p></div>
+                            <div class="text-right"><p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Core Methodology</p><span class="inline-block mt-1 px-3 py-1 bg-purple-50 text-purple-700 text-sm font-bold rounded-full border border-purple-100">${tData.style}</span></div>
+                        </div>
+                        <div class="pt-4 border-t border-slate-100">
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-sm font-semibold text-slate-600">Class Average Success Rate</span><span class="text-2xl font-black ${tData.overall_rating < 68 ? 'text-rose-600' : 'text-slate-800'}">${tData.overall_rating}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2.5"><div class="${tData.overall_rating < 68 ? 'bg-rose-500' : 'bg-purple-500'} h-2.5 rounded-full" style="width: ${tData.overall_rating}%"></div></div>
+                        </div>
+                    </div>
+                    ${suggestionBox}`;
+            }
+            else if (entityType === 'Subject') {
+                title.innerHTML = `<div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl shadow-sm"><i class="ph-fill ph-book-open"></i></div><div class="flex flex-col"><span class="leading-none">${entityName}</span><span class="text-xs font-medium text-emerald-600 mt-1 uppercase tracking-wider">Subject Overview</span></div>`;
+                let totalScore = 0; let count = 0; let topStudent = {name:'', score: 0};
+                currentLiveData.heatmap.matrix.forEach(r => { const sc = r.scores[entityName]; if(sc && sc !== '-') { totalScore += sc; count++; if(sc > topStudent.score) topStudent = {name: r.student, score: sc}; } });
+                const avg = count > 0 ? (totalScore / count).toFixed(1) : 'N/A';
+                const teachers = currentLiveData.teachers.teacher_metrics.filter(t => t.subject === entityName).map(t => t.teacher).join(', ') || 'Unassigned';
+
+                body.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center"><span class="text-sm text-slate-500 font-semibold uppercase tracking-wide mb-1">Global Average</span><span class="text-3xl font-black text-emerald-600">${avg}%</span></div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center"><span class="text-sm text-slate-500 font-semibold uppercase tracking-wide mb-1">Top Student</span><span class="text-xl font-bold text-slate-800 leading-tight">${topStudent.name} <span class="text-emerald-500">(${topStudent.score}%)</span></span></div>
+                    </div>
+                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100"><h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Assigned Faculty</h4><div class="flex items-center gap-2"><i class="ph-fill ph-chalkboard-teacher text-slate-400 text-lg"></i><span class="font-semibold text-slate-700">${teachers}</span></div></div>`;
+            }
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+        }
+
+        function closeDetailsModal() { document.getElementById('entityModal').classList.add('hidden'); document.getElementById('entityModal').classList.remove('flex'); }
+
+        function setupInteractions() {
+            const safeAddListener = (id, event, handler) => { const el = document.getElementById(id); if (el) { const newEl = el.cloneNode(true); el.parentNode.replaceChild(newEl, el); newEl.addEventListener(event, handler); } };
+
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                const newSearchInput = searchInput.cloneNode(true); searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+                newSearchInput.addEventListener('input', function(e) {
+                    const query = e.target.value.toLowerCase(), clearBtn = document.getElementById('clearSearch'), searchDropdown = document.getElementById('searchDropdown');
+                    if(query.length > 0) clearBtn.classList.remove('hidden'); else clearBtn.classList.add('hidden');
+                    document.querySelectorAll('#heatmap-body tr, #affinity-body tr, #weak-list li, #strong-list li').forEach(row => { row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none'; });
+                    document.querySelectorAll('#teacher-cards > div').forEach(card => { card.style.display = card.innerText.toLowerCase().includes(query) ? '' : 'none'; });
+                    if(query.length < 2) { searchDropdown.classList.add('hidden'); return; }
+                    const matches = searchIndex.filter(item => item.name.toLowerCase().includes(query) || (item.meta && item.meta.toLowerCase().includes(query))).slice(0, 8);
+                    if (matches.length > 0) {
+                        searchDropdown.innerHTML = matches.map(m => `<div class="p-3 hover:bg-slate-50 cursor-pointer flex items-center gap-3 transition-colors" onclick="openDetailsModal('${m.name}', '${m.type}')"><div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500"><i class="ph-fill ${m.icon}"></i></div><div><p class="text-sm font-bold text-slate-800 leading-none">${m.name}</p><p class="text-[0.65rem] font-semibold text-primary-500 uppercase mt-1 tracking-wider">${m.type} ${m.meta ? '• ' + m.meta : ''}</p></div></div>`).join('');
+                        searchDropdown.classList.remove('hidden');
+                    } else { searchDropdown.innerHTML = `<div class="p-4 text-center text-sm text-slate-500">No matching profile found.</div>`; searchDropdown.classList.remove('hidden'); }
+                });
+            }
+
+            safeAddListener('clearSearch', 'click', () => { const searchInput = document.getElementById('searchInput'); searchInput.value = ''; searchInput.dispatchEvent(new Event('input')); document.getElementById('searchDropdown').classList.add('hidden'); });
+
+            document.addEventListener('click', (e) => {
+                const searchInput = document.getElementById('searchInput'), searchDropdown = document.getElementById('searchDropdown');
+                if (searchInput && searchDropdown && !searchInput.contains(e.target) && !searchDropdown.contains(e.target)) searchDropdown.classList.add('hidden');
+                const fb = document.getElementById('filterBtn'), fd = document.getElementById('filterDropdown');
+                if (fb && fd && !fb.contains(e.target) && !fd.contains(e.target)) fd.classList.add('hidden');
+                const ub = document.getElementById('userMenuBtn'), ud = document.getElementById('userDropdown');
+                if (ub && ud && !ub.contains(e.target) && !ud.contains(e.target)) ud.classList.add('hidden');
+                const nb = document.getElementById('notificationBtn'), nd = document.getElementById('notificationDropdown');
+                if (nb && nd && !nb.contains(e.target) && !nd.contains(e.target)) nd.classList.add('hidden');
+            });
+
+            safeAddListener('notificationBtn', 'click', (e) => { e.stopPropagation(); document.getElementById('notificationDropdown').classList.toggle('hidden'); });
+            safeAddListener('markReadBtn', 'click', (e) => { e.stopPropagation(); markAllNotificationsRead(); showToast('All notifications marked as read', 'success'); });
+            safeAddListener('userMenuBtn', 'click', (e) => { e.stopPropagation(); document.getElementById('userDropdown').classList.toggle('hidden'); });
+            safeAddListener('filterBtn', 'click', (e) => { e.stopPropagation(); document.getElementById('filterDropdown').classList.toggle('hidden'); });
+            safeAddListener('resetFilters', 'click', (e) => { e.stopPropagation(); document.querySelectorAll('.term-filter, .perf-filter, .style-filter').forEach(cb => cb.checked = true); });
+            
+            safeAddListener('applyFiltersBtn', 'click', async (e) => {
+                e.stopPropagation(); document.getElementById('filterDropdown').classList.add('hidden');
+                const fb = document.getElementById('filterBtn'), originalText = fb.innerHTML; fb.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Applying...';
+                const selectedTerms = Array.from(document.querySelectorAll('.term-filter:checked')).map(cb => cb.value), selectedPerf = Array.from(document.querySelectorAll('.perf-filter:checked')).map(cb => cb.value), selectedStyles = Array.from(document.querySelectorAll('.style-filter:checked')).map(cb => cb.value);
+                await loadDashboard(selectedTerms, selectedPerf, selectedStyles);
+                fb.innerHTML = '<i class="ph ph-check text-emerald-500"></i> Applied'; showToast(`Filters successfully applied.`, 'success'); setTimeout(() => { fb.innerHTML = originalText; }, 2000); 
+            });
+            
+            safeAddListener('syncLiveBtn', 'click', async function(e) {
+                e.stopPropagation();
+                const btn = this, originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Syncing...';
+                const selectedTerms = Array.from(document.querySelectorAll('.term-filter:checked')).map(cb => cb.value);
+                const selectedPerf = Array.from(document.querySelectorAll('.perf-filter:checked')).map(cb => cb.value);
+                const selectedStyles = Array.from(document.querySelectorAll('.style-filter:checked')).map(cb => cb.value);
+                await checkBackendStatus();
+                await loadDashboard(selectedTerms, selectedPerf, selectedStyles);
+                btn.innerHTML = '<i class="ph ph-check text-emerald-500"></i> Synced!'; showToast(`Data refreshed successfully.`, 'success'); setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+            });
+
+            safeAddListener('exportBtn', 'click', async function() {
+                const btn = this, originalText = btn.innerHTML; btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Exporting...';
+                try {
+                    const targetUrl = `${API_BASE_URL}/api/export`;
+                    const response = await fetch(targetUrl);
+                    if (response.ok) {
+                        const blob = await response.blob(), url = URL.createObjectURL(blob), link = document.createElement("a");
+                        link.href = url; link.download = "EduAnalyzer_Live_Database.xlsx";
+                        document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+                    } else throw new Error('Backend unreachable. Using local export.');
+                } catch(err) {
+                    console.warn(err.message);
+                    const subjects = currentLiveData.heatmap.subjects; const styles = ["Visual", "Blended", "Auditory", "Kinesthetic", "Reading/Writing"];
+                    let csvContent = `Student Name,${subjects.join(',')},${styles.join(',')}\n`;
+                    currentLiveData.heatmap.matrix.forEach(row => {
+                        const subScores = subjects.map(sub => row.scores[sub] !== "-" ? row.scores[sub] : "");
+                        const profile = (currentLiveData.students.learning_profiles || []).find(p => p.student === row.student) || {scores:{}};
+                        const styleScores = styles.map(st => profile.scores[st] !== "-" && profile.scores[st] !== undefined ? profile.scores[st] : "");
+                        csvContent += `"${row.student}",${subScores.join(',')},${styleScores.join(',')}\n`;
+                    });
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }), url = URL.createObjectURL(blob), link = document.createElement("a");
+                    link.href = url; link.download = "eduanalyzer_full_report.csv"; link.style.display = 'none';
+                    document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+                }
+                setTimeout(() => { btn.innerHTML = '<i class="ph ph-check"></i> Exported!'; setTimeout(() => btn.innerHTML = originalText, 2500); }, 500);
+            });
+        }
+    </script>
+</body>
+</html>
