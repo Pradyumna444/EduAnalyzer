@@ -25,10 +25,22 @@ CORS(app)  # Enable Cross-Origin Resource Sharing
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Database File Paths
+# -------------------------------------------------------------------
+# CRITICAL VERCEL FIX: Handling Read-Only File Systems
+# -------------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, 'data')
+
+# Check if running on Vercel environment
+if os.environ.get('VERCEL') == '1':
+    # Vercel only allows writing to the /tmp folder. 
+    # NOTE: Data saved here is ephemeral and WILL disappear when the serverless function goes to sleep.
+    DATA_DIR = '/tmp/data'
+else:
+    # Local environment
+    DATA_DIR = os.path.join(BASE_DIR, 'data')
+
 EXCEL_DB_PATH = os.path.join(DATA_DIR, 'Class_Performance_Teaching_Style.xlsx')
+# -------------------------------------------------------------------
 
 @app.after_request
 def add_header(response):
@@ -50,8 +62,6 @@ class ExcelDatabase:
         self.filepath = filepath
         
         # CRITICAL FIX: Pandas strictly enforces file extensions. 
-        # Using ".tmp" caused the "No engine for filetype" error. 
-        # We must use valid .xlsx extensions for our temporary files.
         base, ext = os.path.splitext(filepath)
         if not ext: ext = '.xlsx'
         self.tmp_filepath = f"{base}_TMP{ext}"
@@ -130,7 +140,6 @@ class ExcelDatabase:
         """
         with self.lock:
             try:
-                # Dynamic check for openpyxl to provide clear error message
                 try:
                     import openpyxl
                 except ImportError:
@@ -139,7 +148,6 @@ class ExcelDatabase:
                 os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
                 
                 # 1. Write to temporary file first 
-                # (FIXED: Pandas requires the file extension to be .xlsx, which we fixed in __init__)
                 self.df.to_excel(self.tmp_filepath, index=False, sheet_name='Student_Performance', engine='openpyxl')
                 
                 # 2. Try Atomic replace
@@ -151,14 +159,12 @@ class ExcelDatabase:
                     return True, "Success"
                 
                 except (PermissionError, OSError) as e:
-                    # 3. ANTI-LOCK FALLBACK: If user has Excel open, Windows blocks saving.
-                    # We bypass the block by generating an Unlocked copy and redirecting the server to it!
+                    # 3. ANTI-LOCK FALLBACK
                     logging.warning(f"File locked by Excel! Triggering bypass... ({e})")
                     
                     fallback_name = os.path.basename(self.filepath).replace('.xlsx', '_UNLOCKED.xlsx')
                     fallback_path = os.path.join(os.path.dirname(self.filepath), fallback_name)
                     
-                    # (Explicitly setting engine here too for consistency)
                     self.df.to_excel(fallback_path, index=False, sheet_name='Student_Performance', engine='openpyxl')
                     
                     # Permanently redirect backend logic to the new safe file
@@ -184,7 +190,6 @@ db = ExcelDatabase(EXCEL_DB_PATH)
 
 @app.route('/api/add_student', methods=['POST'])
 def add_student():
-    """CREATE: Adds a new student and syncs to Excel."""
     data = request.json
     if not data or not data.get('name'):
         return jsonify({"status": "error", "message": "Invalid or missing student name"}), 400
@@ -227,7 +232,6 @@ def add_student():
 
 @app.route('/api/edit_scores', methods=['PUT'])
 def edit_scores():
-    """UPDATE: Modifies existing scores in Excel."""
     data = request.json
     student_name = str(data.get('student', '')).strip()
     scores = data.get('scores', {})
@@ -269,7 +273,6 @@ def edit_scores():
 
 @app.route('/api/edit_name', methods=['PUT'])
 def edit_name():
-    """UPDATE: Globally renames an entity across the Excel database."""
     data = request.json
     old_name = str(data.get('oldName', '')).strip()
     new_name = str(data.get('newName', '')).strip()
@@ -367,5 +370,6 @@ def export_data():
         with open(db.filepath, 'rb') as f: excel_data = f.read()
     return Response(excel_data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-disposition": f"attachment; filename={os.path.basename(db.filepath)}"})
 
+# NOTE: For Vercel, having app.run() at the bottom is fine, Vercel builder handles it.
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=5000, threaded=True)
