@@ -1,0 +1,29 @@
+Flask==3.0.2
+Flask-Cors==4.0.0
+pandas==2.2.1
+openpyxl==3.1.2
+
+### 2. Explain the root cause
+- **What it was doing vs. What it needed to do:** Your backend was written like a desktop application. When your code hit `db = ExcelDatabase(EXCEL_DB_PATH)`, it immediately ran `os.makedirs()` to create a local folder on the hard drive to store an Excel file.
+- **What condition triggered the error:** Vercel utilizes a **Read-Only File System**. When Python asked the server's hard drive to create a folder and save an Excel file, the server denied permission (`OSError: Read-only file system`) and immediately killed the Python process.
+- **The misconception:** Assuming the cloud server acts like your laptop where you can freely save files next to your code. 
+
+### 3. Teach the concept: Serverless vs. Stateful
+- **Why does this error exist?** Vercel runs **Serverless Functions**. When a user visits your website, Vercel spins up a tiny, invisible computer just for that request. It runs your Python code, serves the data, and then *destroys the computer 10 seconds later*. Because it scales to millions of users instantly by cloning your code, it locks the file system so functions don't corrupt each other's files.
+- **The Mental Model:** Think of a Serverless Function like a fast-food drive-thru worker. They have the recipe (your code) and they can hand you the food, but they are not allowed to store personal items behind the counter. If you ask them to save a sticky note (your Excel file) for tomorrow, they can't do it because a completely different worker will be at the window tomorrow.
+- **How I fixed the code:** Vercel *does* provide one temporary exception: the `/tmp` folder. I modified your code to detect if it's running on Vercel. If it is, it saves the Excel file to `/tmp/data`. This stops the crash. **However, any data added by users will be lost** after a few minutes when the function goes to sleep.
+
+### 4. Show warning signs
+In the future, if you are planning to deploy to a serverless provider (Vercel, Netlify, AWS Lambda), look out for these patterns in your code:
+- **`open('file.txt', 'w')`**: Writing files to the disk.
+- **`df.to_excel()` or `df.to_csv()`**: Saving pandas dataframes locally.
+- **`sqlite3.connect('local.db')`**: Using local SQLite databases.
+Any of these will cause a `500 INTERNAL_SERVER_ERROR` or data loss in a Serverless environment.
+
+### 5. Discuss alternatives
+Because your app relies on Pandas modifying an Excel file to act as a database, **Vercel is actually not the best hosting choice for this specific architecture.** You have two valid paths moving forward:
+
+* **Alternative 1: Change the Host (Recommended for your current code)**
+  Move your project from Vercel to **Render.com** or **Railway.app**. These are "Stateful" hosts. They give you a real, continuously running server with a hard drive, meaning your Excel database code will work flawlessly exactly as you originally wrote it without resetting.
+* **Alternative 2: Change the Database (Keep Vercel)**
+  Keep hosting on Vercel, but rip out the `openpyxl` and Pandas Excel logic. Replace it with a cloud-based database like **Supabase** (PostgreSQL) or **MongoDB Atlas**. Your Python code would connect to the database via a URL instead of trying to save a local `.xlsx` file.
