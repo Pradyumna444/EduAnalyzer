@@ -278,8 +278,8 @@
                             <!-- Admin Dropdown -->
                             <div id="userDropdown" class="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 hidden z-50 overflow-hidden transform origin-top-right transition-all">
                                 <div class="p-2">
-                                    <button onclick="openProfileModal(); document.getElementById('userDropdown').classList.add('hidden');" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-colors"><i class="ph ph-user"></i> My Profile</button>
-                                    <button onclick="openSettingsModal(); document.getElementById('userDropdown').classList.add('hidden');" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-colors"><i class="ph ph-gear"></i> Settings</button>
+                                    <a href="#" onclick="openProfileModal(); document.getElementById('userDropdown').classList.add('hidden'); return false;" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-colors"><i class="ph ph-user"></i> My Profile</a>
+                                    <a href="#" onclick="openSettingsModal(); document.getElementById('userDropdown').classList.add('hidden'); return false;" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-colors"><i class="ph ph-gear"></i> Settings</a>
                                     <div class="h-px bg-slate-100 my-1"></div>
                                     <button id="signOutBtn" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"><i class="ph ph-sign-out"></i> Sign Out</button>
                                 </div>
@@ -644,7 +644,62 @@
 
     <!-- Application Logic -->
     <script>
-        // --- GLOBAL CHART DEFAULTS & CONFIG ---
+        // --- AUTHENTICATION LOGIC ---
+        function checkAuth() {
+            try {
+                return sessionStorage.getItem('eduanalyzer_auth') === 'true';
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function setAuth() {
+            try {
+                sessionStorage.setItem('eduanalyzer_auth', 'true');
+            } catch (e) { /* ignore */ }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('loginUsername').value;
+            const pass = document.getElementById('loginPassword').value;
+            const errorMsg = document.getElementById('loginError');
+
+            // Secure frontend validation 
+            if (user === 'admin' && pass === 'Group@8') {
+                setAuth();
+                errorMsg.classList.add('hidden');
+                
+                const loginScreen = document.getElementById('loginScreen');
+                loginScreen.classList.add('animate-fade-out');
+                
+                setTimeout(() => {
+                    loginScreen.classList.add('hidden');
+                    document.getElementById('mainApp').classList.remove('hidden');
+                    document.getElementById('mainApp').classList.add('animate-fade-in');
+                    initializeApp(); // Fire up the main application
+                }, 400); // match animation duration
+            } else {
+                errorMsg.classList.remove('hidden');
+                const card = document.getElementById('loginCard');
+                // Trigger reflow to restart CSS animation
+                card.classList.remove('animate-shake');
+                void card.offsetWidth; 
+                card.classList.add('animate-shake');
+            }
+        }
+
+        function handleSignOut() {
+            try {
+                sessionStorage.removeItem('eduanalyzer_auth');
+            } catch (e) {}
+            showToast('You have been securely signed out.', 'success');
+            setTimeout(() => {
+                window.location.replace(window.location.pathname);
+            }, 800);
+        }
+
+        // --- GLOBAL CHART DEFAULTS ---
         Chart.defaults.font.family = '"Plus Jakarta Sans", sans-serif';
         Chart.defaults.color = '#64748b';
         Chart.defaults.scale.grid.color = 'rgba(226, 232, 240, 0.5)';
@@ -656,54 +711,16 @@
         let searchIndex = [];
         let currentLiveData = { heatmap: null, students: null, teachers: null };
         let notificationsRead = false; 
+        
+        let localAddedStudents = []; 
+        let renamedStudents = {};
+        let renamedTeachers = {};
+        let editedScores = {}; 
 
+        // --- GLOBAL API CONNECTION HANDLER ---
         // Smart routing: Use local backend if testing locally, otherwise use Render cloud backend
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('10.') || window.location.hostname.startsWith('192.');
         const API_BASE_URL = isLocal ? window.location.origin : 'https://eduanalyzer.onrender.com';
-
-        // --- AUTHENTICATION LOGIC ---
-        function checkAuth() {
-            try { return sessionStorage.getItem('eduanalyzer_auth') === 'true'; } 
-            catch (e) { return false; }
-        }
-
-        function setAuth() {
-            try { sessionStorage.setItem('eduanalyzer_auth', 'true'); } 
-            catch (e) { /* ignore */ }
-        }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            const user = document.getElementById('loginUsername').value;
-            const pass = document.getElementById('loginPassword').value;
-            const errorMsg = document.getElementById('loginError');
-
-            if (user === 'admin' && pass === 'Group@8') {
-                setAuth();
-                errorMsg.classList.add('hidden');
-                const loginScreen = document.getElementById('loginScreen');
-                loginScreen.classList.add('animate-fade-out');
-                
-                setTimeout(() => {
-                    loginScreen.classList.add('hidden');
-                    document.getElementById('mainApp').classList.remove('hidden');
-                    document.getElementById('mainApp').classList.add('animate-fade-in');
-                    initializeApp(); // Fetch data AFTER UI is visible
-                }, 400);
-            } else {
-                errorMsg.classList.remove('hidden');
-                const card = document.getElementById('loginCard');
-                card.classList.remove('animate-shake');
-                void card.offsetWidth; 
-                card.classList.add('animate-shake');
-            }
-        }
-
-        function handleSignOut() {
-            try { sessionStorage.removeItem('eduanalyzer_auth'); } catch (e) {}
-            showToast('You have been securely signed out.', 'success');
-            setTimeout(() => window.location.replace(window.location.pathname), 800);
-        }
 
         // --- TOAST NOTIFICATIONS ---
         function showToast(message, type = 'info') {
@@ -715,12 +732,25 @@
             let iconColor = 'text-primary-500';
             let bgColor = 'bg-primary-50';
 
-            if (type === 'success') { icon = 'ph-check-circle'; colorClasses = 'bg-white border-emerald-100 text-slate-700'; iconColor = 'text-emerald-500'; bgColor = 'bg-emerald-50'; } 
-            else if (type === 'error') { icon = 'ph-warning-circle'; colorClasses = 'bg-white border-rose-100 text-slate-700'; iconColor = 'text-rose-500'; bgColor = 'bg-rose-50'; }
+            if (type === 'success') {
+                icon = 'ph-check-circle';
+                colorClasses = 'bg-white border-emerald-100 text-slate-700';
+                iconColor = 'text-emerald-500';
+                bgColor = 'bg-emerald-50';
+            } else if (type === 'error') {
+                icon = 'ph-warning-circle';
+                colorClasses = 'bg-white border-rose-100 text-slate-700';
+                iconColor = 'text-rose-500';
+                bgColor = 'bg-rose-50';
+            }
 
             toast.className = `flex items-center gap-3 p-4 rounded-2xl shadow-xl border ${colorClasses} transform transition-all duration-300 min-w-[250px] shadow-glass translate-y-10 opacity-0`;
-            toast.innerHTML = `<div class="w-10 h-10 rounded-full ${bgColor} flex items-center justify-center flex-shrink-0"><i class="ph-fill ${icon} text-xl ${iconColor}"></i></div><p class="text-sm font-semibold">${message}</p>`;
-            
+            toast.innerHTML = `
+                <div class="w-10 h-10 rounded-full ${bgColor} flex items-center justify-center flex-shrink-0">
+                    <i class="ph-fill ${icon} text-xl ${iconColor}"></i>
+                </div>
+                <p class="text-sm font-semibold">${message}</p>
+            `;
             container.appendChild(toast);
             requestAnimationFrame(() => toast.classList.remove('translate-y-10', 'opacity-0'));
             setTimeout(() => {
@@ -738,8 +768,8 @@
         }
 
         // --- APP INITIALIZATION ---
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. Setup Theme
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 1. Theme Check (runs immediately so UI doesn't flash)
             if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
                 const toggle = document.getElementById('darkModeToggle');
@@ -747,13 +777,13 @@
                 updateChartColors(true);
             }
 
-            // 2. Setup UI Interactions Immediately (fixes frozen UI bug)
-            setupInteractions();
-
-            // 3. Bind Login / Logout
+            // 2. Attach Login Event Listener
             const loginForm = document.getElementById('loginForm');
-            if (loginForm) loginForm.addEventListener('submit', handleLogin);
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
 
+            // 3. Attach Sign Out Event Listener
             const signOutBtn = document.getElementById('signOutBtn');
             if (signOutBtn) {
                 signOutBtn.addEventListener('click', (e) => {
@@ -763,76 +793,26 @@
                 });
             }
 
-            // 4. Autoload if session exists
+            // 4. Authentication Check
             if (checkAuth()) {
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
-                initializeApp(); 
+                initializeApp(); // Run main app logic
             } else {
+                // Keep login visible, do not fetch data yet.
                 const userInput = document.getElementById('loginUsername');
                 if (userInput) userInput.focus();
             }
         });
 
+        // Separated app logic so it only runs AFTER login
         async function initializeApp() {
             await checkBackendStatus();
             const selectedTerms = Array.from(document.querySelectorAll('.term-filter:checked')).map(cb => cb.value);
             const selectedPerf = Array.from(document.querySelectorAll('.perf-filter:checked')).map(cb => cb.value);
             const selectedStyles = Array.from(document.querySelectorAll('.style-filter:checked')).map(cb => cb.value);
             await loadDashboard(selectedTerms, selectedPerf, selectedStyles);
-        }
-
-        // --- MODALS (Globally Accessible) ---
-        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
-        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
-        function openProfileModal() { document.getElementById('profileModal').classList.remove('hidden'); }
-        function closeProfileModal() { document.getElementById('profileModal').classList.add('hidden'); }
-
-        function openAddStudentModal() {
-            if (!currentLiveData.heatmap || !currentLiveData.heatmap.subjects) {
-                showToast("Please wait for the database to connect before adding students.", "error");
-                return;
-            }
-            
-            const modal = document.getElementById('addStudentModal');
-            const subjectsContainer = document.getElementById('newStudentSubjects');
-            document.getElementById('newStudentName').value = '';
-            document.getElementById('newStudentAttendance').value = '85';
-            
-            subjectsContainer.innerHTML = currentLiveData.heatmap.subjects.map(sub => `
-                <div class="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-                    <label class="text-sm font-semibold text-slate-600 truncate flex-1" title="${sub}">${sub}</label>
-                    <input type="number" data-subject="${sub}" class="new-student-score w-24 px-3 py-1.5 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-sm text-center font-bold text-slate-800" placeholder="-" min="0" max="100">
-                </div>
-            `).join('');
-            
-            modal.classList.remove('hidden');
-        }
-
-        function closeAddStudentModal() { document.getElementById('addStudentModal').classList.add('hidden'); }
-
-        // --- NOTIFICATIONS ---
-        function handleNotificationClick(e, entityName, entityType, fallbackMessage) {
-            e.preventDefault();
-            document.getElementById('notificationDropdown').classList.add('hidden');
-            if (entityName && entityType) openDetailsModal(entityName, entityType);
-            else if (fallbackMessage) showToast(fallbackMessage, 'info');
-        }
-
-        function dismissNotification(buttonElement) {
-            const parent = buttonElement.closest('.relative.group');
-            parent.style.opacity = '0';
-            setTimeout(() => {
-                parent.remove();
-                if (document.getElementById('notificationList').children.length === 0) markAllNotificationsRead();
-            }, 200);
-            showToast('Notification dismissed', 'info');
-        }
-
-        function markAllNotificationsRead() {
-            notificationsRead = true;
-            document.getElementById('notificationBadge')?.classList.add('hidden');
-            document.getElementById('notificationList').innerHTML = `<div class="p-8 text-center flex flex-col items-center justify-center text-slate-400"><div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3"><i class="ph ph-check-circle text-2xl text-slate-300"></i></div><p class="text-sm font-bold text-slate-600">You're all caught up!</p><p class="text-xs mt-1">No new notifications.</p></div>`;
+            setupInteractions();
         }
 
         // --- MOCK DATA (Fallback) ---
@@ -891,9 +871,20 @@
         // --- FETCH API LOGIC ---
         async function safeFetch(url, mockKey) {
             try {
+                // Aggressive Cache Busting
                 const separator = url.includes('?') ? '&' : '?';
-                const targetUrl = `${API_BASE_URL}${url}${separator}t=${new Date().getTime()}`;
-                const response = await fetch(targetUrl, { method: 'GET', headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache', 'Expires': '0' } });
+                const cacheBuster = `t=${new Date().getTime()}`;
+                const targetUrl = `${API_BASE_URL}${url}${separator}${cacheBuster}`;
+                
+                const response = await fetch(targetUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
+                
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 return await response.json();
             } catch (error) {
@@ -902,11 +893,13 @@
             }
         }
 
+        // --- CHECK DB CONNECTION ---
         async function checkBackendStatus() {
             const statusEl = document.getElementById('backendStatus');
             if(!statusEl) return;
             try {
-                const response = await fetch(`${API_BASE_URL}/api/heatmap_data`);
+                const targetUrl = `${API_BASE_URL}/api/heatmap_data`;
+                const response = await fetch(targetUrl);
                 if(response.ok) {
                     statusEl.className = "hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold border border-emerald-100 dark:border-emerald-500/20 transition-colors";
                     statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span> Live DB Connected';
@@ -947,12 +940,15 @@
         }
 
         async function loadDashboard(selectedTerms = [], selectedPerf = ['Top', 'Average', 'Weak'], selectedStyles = ["Visual", "Blended", "Auditory", "Kinesthetic", "Reading/Writing"]) {
+            
+            // Show loading state in the Heatmap table to inform user of cold starts
             const tbody = document.getElementById('heatmap-body');
             if (tbody) {
                 tbody.innerHTML = `<tr><td colspan="100%" class="p-10 text-center"><i class="ph ph-spinner-gap animate-spin text-4xl text-primary-500 mb-3 mx-auto flex justify-center"></i><p class="text-slate-600 font-bold">Waking up database server...</p><p class="text-xs text-slate-400 mt-1">If the cloud server was asleep, this can take up to 50 seconds.</p></td></tr>`;
             }
 
             const queryString = selectedTerms.length > 0 ? `?terms=${encodeURIComponent(selectedTerms.join(','))}` : '';
+            
             const [heatmapData, studentsData, teachersData] = await Promise.all([
                 safeFetch(`/api/heatmap_data${queryString}`, 'heatmap'),
                 safeFetch(`/api/student_analysis${queryString}`, 'students'),
@@ -962,6 +958,7 @@
             if (notificationsRead) document.getElementById('notificationBadge')?.classList.add('hidden');
 
             currentLiveData = { heatmap: JSON.parse(JSON.stringify(heatmapData)), students: JSON.parse(JSON.stringify(studentsData)), teachers: JSON.parse(JSON.stringify(teachersData)) };
+
             let renderData = { heatmap: JSON.parse(JSON.stringify(heatmapData)), students: JSON.parse(JSON.stringify(studentsData)), teachers: JSON.parse(JSON.stringify(teachersData)) };
 
             if (!selectedPerf.includes('Top')) renderData.students.strong = [];
@@ -982,7 +979,7 @@
             });
             
             if (renderData.students.learning_profiles) {
-                renderData.students.learning_profiles = renderData.students.learning_profiles.filter(prof => !!renderData.heatmap.matrix.find(r => r.student === prof.student));
+                renderData.students.learning_profiles = renderData.students.learning_profiles.filter(prof => { return !!renderData.heatmap.matrix.find(r => r.student === prof.student); });
             }
 
             if (selectedStyles && selectedStyles.length > 0 && renderData.teachers.teacher_metrics) {
@@ -1231,7 +1228,7 @@
             } catch (e) { 
                 console.error(e);
                 showToast(e.message === "Failed to fetch" ? "Backend Server is Offline." : `Error: ${e.message}`, 'error');
-                return; 
+                return; // Stop execution on hard error so user can fix Excel lock/module
             }
 
             const selectedTerms = Array.from(document.querySelectorAll('.term-filter:checked')).map(cb => cb.value), selectedPerf = Array.from(document.querySelectorAll('.perf-filter:checked')).map(cb => cb.value), selectedStyles = Array.from(document.querySelectorAll('.style-filter:checked')).map(cb => cb.value);
@@ -1255,51 +1252,11 @@
             } catch (e) { 
                 console.error(e);
                 showToast(e.message === "Failed to fetch" ? "Backend Server is Offline." : `Error: ${e.message}`, 'error');
-                return; 
+                return; // Stop execution on hard error so user can fix Excel lock/module
             }
 
             const selectedTerms = Array.from(document.querySelectorAll('.term-filter:checked')).map(cb => cb.value), selectedPerf = Array.from(document.querySelectorAll('.perf-filter:checked')).map(cb => cb.value), selectedStyles = Array.from(document.querySelectorAll('.style-filter:checked')).map(cb => cb.value);
             await loadDashboard(selectedTerms, selectedPerf, selectedStyles); openDetailsModal(newName, entityType);
-        }
-
-        async function saveNewStudent() {
-            const nameInput = document.getElementById('newStudentName').value.trim();
-            const attInput = parseFloat(document.getElementById('newStudentAttendance').value) || 85.0;
-            if (!nameInput) return showToast('Student name is required.', 'error');
-
-            const newScores = {}; let totalScore = 0; let count = 0;
-            document.querySelectorAll('.new-student-score').forEach(input => {
-                const sub = input.getAttribute('data-subject'), val = input.value;
-                if (val !== '' && !isNaN(val)) { newScores[sub] = parseFloat(val); totalScore += parseFloat(val); count++; } 
-                else newScores[sub] = '-';
-            });
-            const avgScore = count > 0 ? parseFloat((totalScore / count).toFixed(1)) : 0;
-            
-            const newStudentObj = {
-                name: nameInput, attendance: attInput, avg: avgScore, scores: newScores,
-                profile: { student: nameInput, scores: { "Visual": 60, "Blended": 65, "Auditory": 55, "Kinesthetic": 50, "Reading/Writing": 70 } }
-            };
-
-            try {
-                const targetUrl = `${API_BASE_URL}/api/add_student`;
-                const response = await fetch(targetUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newStudentObj) });
-                
-                if (!response.ok) {
-                    const errData = await response.json();
-                    throw new Error(errData.message || "Failed to update Excel DB.");
-                }
-                showToast(response.message || `${nameInput} added and saved to Live Database!`, 'success');
-                closeAddStudentModal();
-            } catch (e) {
-                console.error(e);
-                showToast(e.message === "Failed to fetch" ? "Backend Server is Offline." : `Error: ${e.message}`, 'error');
-                return;
-            }
-
-            const selectedTerms = Array.from(document.querySelectorAll('.term-filter:checked')).map(cb => cb.value);
-            const selectedPerf = Array.from(document.querySelectorAll('.perf-filter:checked')).map(cb => cb.value);
-            const selectedStyles = Array.from(document.querySelectorAll('.style-filter:checked')).map(cb => cb.value);
-            loadDashboard(selectedTerms, selectedPerf, selectedStyles);
         }
 
         function openDetailsModal(entityName, entityType) {
@@ -1393,8 +1350,10 @@
                     </div>
                     <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100"><h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Assigned Faculty</h4><div class="flex items-center gap-2"><i class="ph-fill ph-chalkboard-teacher text-slate-400 text-lg"></i><span class="font-semibold text-slate-700">${teachers}</span></div></div>`;
             }
-            modal.classList.remove('hidden');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
         }
+
+        function closeDetailsModal() { document.getElementById('entityModal').classList.add('hidden'); document.getElementById('entityModal').classList.remove('flex'); }
 
         function setupInteractions() {
             const safeAddListener = (id, event, handler) => { const el = document.getElementById(id); if (el) { const newEl = el.cloneNode(true); el.parentNode.replaceChild(newEl, el); newEl.addEventListener(event, handler); } };
