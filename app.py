@@ -29,15 +29,16 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # CRITICAL VERCEL FIX: Handling Read-Only File Systems
 # -------------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BUNDLED_DATA_DIR = os.path.join(BASE_DIR, 'data')
+BUNDLED_EXCEL_PATH = os.path.join(BUNDLED_DATA_DIR, 'Class_Performance_Teaching_Style.xlsx')
 
 # Check if running on Vercel environment
 if os.environ.get('VERCEL') == '1':
     # Vercel only allows writing to the /tmp folder. 
-    # NOTE: Data saved here is ephemeral and WILL disappear when the serverless function goes to sleep.
     DATA_DIR = '/tmp/data'
 else:
     # Local environment
-    DATA_DIR = os.path.join(BASE_DIR, 'data')
+    DATA_DIR = BUNDLED_DATA_DIR
 
 EXCEL_DB_PATH = os.path.join(DATA_DIR, 'Class_Performance_Teaching_Style.xlsx')
 # -------------------------------------------------------------------
@@ -80,6 +81,14 @@ class ExcelDatabase:
     def _initialize_db(self):
         """Loads data from Excel or seeds default data if file is missing."""
         os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
+        
+        # --- FIX: Load real data from GitHub repo into Vercel's /tmp ---
+        if os.environ.get('VERCEL') == '1' and not os.path.exists(self.filepath):
+            if os.path.exists(BUNDLED_EXCEL_PATH):
+                shutil.copy2(BUNDLED_EXCEL_PATH, self.filepath)
+                logging.info("Copied real database from repository to Vercel /tmp folder.")
+        # ---------------------------------------------------------------
+        
         if os.path.exists(self.filepath):
             try:
                 self.df = pd.read_excel(self.filepath, sheet_name='Student_Performance', engine='openpyxl')
@@ -167,7 +176,6 @@ class ExcelDatabase:
                     
                     self.df.to_excel(fallback_path, index=False, sheet_name='Student_Performance', engine='openpyxl')
                     
-                    # Permanently redirect backend logic to the new safe file
                     self.filepath = fallback_path
                     f_base, f_ext = os.path.splitext(self.filepath)
                     self.tmp_filepath = f"{f_base}_TMP{f_ext}"
@@ -187,7 +195,6 @@ db = ExcelDatabase(EXCEL_DB_PATH)
 # ==========================================
 # 3. WRITABLE API ENDPOINTS (CRUD)
 # ==========================================
-
 @app.route('/api/add_student', methods=['POST'])
 def add_student():
     data = request.json
@@ -229,7 +236,6 @@ def add_student():
         
     return jsonify({"status": "success", "message": "Student inserted into Excel"}), 201
 
-
 @app.route('/api/edit_scores', methods=['PUT'])
 def edit_scores():
     data = request.json
@@ -269,7 +275,6 @@ def edit_scores():
         return jsonify({"status": "error", "message": msg}), 500
         
     return jsonify({"status": "success", "message": msg}), 200
-
 
 @app.route('/api/edit_name', methods=['PUT'])
 def edit_name():
@@ -370,6 +375,5 @@ def export_data():
         with open(db.filepath, 'rb') as f: excel_data = f.read()
     return Response(excel_data, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-disposition": f"attachment; filename={os.path.basename(db.filepath)}"})
 
-# NOTE: For Vercel, having app.run() at the bottom is fine, Vercel builder handles it.
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=5000, threaded=True)
