@@ -146,7 +146,7 @@
             </div>
 
             <!-- Login Form -->
-            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-5 relative z-10">
+            <form id="loginForm" class="space-y-5 relative z-10">
                 <!-- Error Message Container -->
                 <div id="loginError" class="hidden bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm font-semibold rounded-xl p-4 flex items-center gap-3">
                     <i class="ph-fill ph-warning-circle text-xl flex-shrink-0"></i>
@@ -281,7 +281,7 @@
                                     <a href="#" onclick="openProfileModal(); document.getElementById('userDropdown').classList.add('hidden'); return false;" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-colors"><i class="ph ph-user"></i> My Profile</a>
                                     <a href="#" onclick="openSettingsModal(); document.getElementById('userDropdown').classList.add('hidden'); return false;" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary-600 rounded-xl transition-colors"><i class="ph ph-gear"></i> Settings</a>
                                     <div class="h-px bg-slate-100 my-1"></div>
-                                    <a href="#" onclick="handleSignOut(); document.getElementById('userDropdown').classList.add('hidden'); return false;" class="flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"><i class="ph ph-sign-out"></i> Sign Out</a>
+                                    <button id="signOutBtn" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"><i class="ph ph-sign-out"></i> Sign Out</button>
                                 </div>
                             </div>
                         </div>
@@ -646,7 +646,17 @@
     <script>
         // --- AUTHENTICATION LOGIC ---
         function checkAuth() {
-            return sessionStorage.getItem('eduanalyzer_auth') === 'true';
+            try {
+                return sessionStorage.getItem('eduanalyzer_auth') === 'true';
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function setAuth() {
+            try {
+                sessionStorage.setItem('eduanalyzer_auth', 'true');
+            } catch (e) { /* ignore */ }
         }
 
         function handleLogin(e) {
@@ -655,10 +665,9 @@
             const pass = document.getElementById('loginPassword').value;
             const errorMsg = document.getElementById('loginError');
 
-            // Secure frontend validation (Note: True security requires backend validation, 
-            // but this meets the prompt's explicit requirement for front-end guarding).
+            // Secure frontend validation 
             if (user === 'admin' && pass === 'Group@8') {
-                sessionStorage.setItem('eduanalyzer_auth', 'true');
+                setAuth();
                 errorMsg.classList.add('hidden');
                 
                 const loginScreen = document.getElementById('loginScreen');
@@ -681,11 +690,13 @@
         }
 
         function handleSignOut() {
-            sessionStorage.removeItem('eduanalyzer_auth');
+            try {
+                sessionStorage.removeItem('eduanalyzer_auth');
+            } catch (e) {}
             showToast('You have been securely signed out.', 'success');
             setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+                window.location.replace(window.location.pathname);
+            }, 800);
         }
 
         // --- GLOBAL CHART DEFAULTS ---
@@ -757,7 +768,7 @@
         }
 
         // --- APP INITIALIZATION ---
-        window.onload = async () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             // 1. Theme Check (runs immediately so UI doesn't flash)
             if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
@@ -766,16 +777,33 @@
                 updateChartColors(true);
             }
 
-            // 2. Authentication Check
+            // 2. Attach Login Event Listener
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
+
+            // 3. Attach Sign Out Event Listener
+            const signOutBtn = document.getElementById('signOutBtn');
+            if (signOutBtn) {
+                signOutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('userDropdown').classList.add('hidden');
+                    handleSignOut();
+                });
+            }
+
+            // 4. Authentication Check
             if (checkAuth()) {
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
                 initializeApp(); // Run main app logic
             } else {
                 // Keep login visible, do not fetch data yet.
-                document.getElementById('loginUsername').focus();
+                const userInput = document.getElementById('loginUsername');
+                if (userInput) userInput.focus();
             }
-        };
+        });
 
         // Separated app logic so it only runs AFTER login
         async function initializeApp() {
