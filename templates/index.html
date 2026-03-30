@@ -515,7 +515,7 @@
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh] animate-slide-up">
             <div class="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
                 <h3 id="modalTitle" class="text-xl font-bold text-slate-800 flex items-center gap-3"></h3>
-                <button onclick="closeDetailsModal()" class="text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm border border-slate-100">
+                <button onclick="closeDetailsModal()" class="relative z-[200] text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm border border-slate-100">
                     <i class="ph ph-x text-lg"></i>
                 </button>
             </div>
@@ -529,7 +529,7 @@
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-slide-up">
             <div class="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
                 <h3 class="text-xl font-bold text-slate-800 flex items-center gap-3"><i class="ph-fill ph-gear text-primary-500"></i> Platform Settings</h3>
-                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm border border-slate-100"><i class="ph ph-x text-lg"></i></button>
+                <button onclick="closeSettingsModal()" class="relative z-[200] text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm border border-slate-100"><i class="ph ph-x text-lg"></i></button>
             </div>
             <div class="p-6 space-y-6">
                 <!-- Toggles -->
@@ -576,7 +576,7 @@
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-slide-up">
             <div class="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
                 <h3 class="text-xl font-bold text-slate-800 flex items-center gap-3"><i class="ph-fill ph-user text-primary-500"></i> My Profile</h3>
-                <button onclick="closeProfileModal()" class="text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm border border-slate-100"><i class="ph ph-x text-lg"></i></button>
+                <button onclick="closeProfileModal()" class="relative z-[200] text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm border border-slate-100"><i class="ph ph-x text-lg"></i></button>
             </div>
             <div class="p-6 flex flex-col items-center">
                 <div class="relative mb-4">
@@ -616,7 +616,7 @@
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-slide-up flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
                 <h3 class="text-xl font-bold text-slate-800 flex items-center gap-3"><i class="ph-fill ph-user-plus text-primary-500"></i> Add New Student</h3>
-                <button onclick="closeAddStudentModal()" class="text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm border border-slate-100"><i class="ph ph-x text-lg"></i></button>
+                <button onclick="closeAddStudentModal()" class="relative z-[200] text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm border border-slate-100"><i class="ph ph-x text-lg"></i></button>
             </div>
             <div class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-5" id="addStudentFormBody">
                 <div>
@@ -747,7 +747,7 @@
                 updateChartColors(true);
             }
 
-            // 2. Setup UI Interactions Immediately (fixes frozen UI bug)
+            // 2. Setup UI Interactions Immediately
             setupInteractions();
 
             // 3. Bind Login / Logout
@@ -782,11 +782,15 @@
             await loadDashboard(selectedTerms, selectedPerf, selectedStyles);
         }
 
-        // --- MODALS (Globally Accessible) ---
+        // --- ROBUST MODAL CLOSERS ---
+        // Uses querySelectorAll to nuke any duplicated hidden modals left behind by copy/pasting
+        function closeSettingsModal() { document.querySelectorAll('#settingsModal').forEach(el => el.classList.add('hidden')); }
+        function closeProfileModal() { document.querySelectorAll('#profileModal').forEach(el => el.classList.add('hidden')); }
+        function closeAddStudentModal() { document.querySelectorAll('#addStudentModal').forEach(el => el.classList.add('hidden')); }
+        function closeDetailsModal() { document.querySelectorAll('#entityModal').forEach(el => el.classList.add('hidden')); }
+
         function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
-        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
         function openProfileModal() { document.getElementById('profileModal').classList.remove('hidden'); }
-        function closeProfileModal() { document.getElementById('profileModal').classList.add('hidden'); }
 
         function openAddStudentModal() {
             if (!currentLiveData.heatmap || !currentLiveData.heatmap.subjects) {
@@ -808,8 +812,6 @@
             
             modal.classList.remove('hidden');
         }
-
-        function closeAddStudentModal() { document.getElementById('addStudentModal').classList.add('hidden'); }
 
         // --- NOTIFICATIONS ---
         function handleNotificationClick(e, entityName, entityType, fallbackMessage) {
@@ -835,61 +837,8 @@
             document.getElementById('notificationList').innerHTML = `<div class="p-8 text-center flex flex-col items-center justify-center text-slate-400"><div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3"><i class="ph ph-check-circle text-2xl text-slate-300"></i></div><p class="text-sm font-bold text-slate-600">You're all caught up!</p><p class="text-xs mt-1">No new notifications.</p></div>`;
         }
 
-        // --- MOCK DATA (Fallback) ---
-        const mockData = {
-            heatmap: {
-                subjects: ["Data Science", "Cryptography", "Entrepreneurship", "Internet of Things", "Cloud Computing"],
-                matrix: [
-                    { student: "Alice Johnson", scores: { "Data Science": 85, "Cryptography": 73, "Entrepreneurship": 78, "Internet of Things": 82, "Cloud Computing": 88 } },
-                    { student: "Tina Lewis", scores: { "Data Science": 84, "Cryptography": 80, "Entrepreneurship": 82, "Internet of Things": 78, "Cloud Computing": 85 } },
-                    { student: "Bob Smith", scores: { "Data Science": 95, "Cryptography": 91, "Entrepreneurship": 89, "Internet of Things": 90, "Cloud Computing": 92 } },
-                    { student: "Charlie Davis", scores: { "Data Science": 45, "Cryptography": 58, "Entrepreneurship": 52, "Internet of Things": 50, "Cloud Computing": 48 } },
-                    { student: "Diana Prince", scores: { "Data Science": 88, "Cryptography": 85, "Entrepreneurship": 90, "Internet of Things": 85, "Cloud Computing": 89 } },
-                    { student: "Evan Wright", scores: { "Data Science": 92, "Cryptography": 96, "Entrepreneurship": 94, "Internet of Things": 94, "Cloud Computing": 95 } },
-                    { student: "Frank Castle", scores: { "Data Science": 55, "Cryptography": 40, "Entrepreneurship": 61, "Internet of Things": 45, "Cloud Computing": 50 } },
-                    { student: "Gregory House", scores: { "Data Science": 45, "Cryptography": 50, "Entrepreneurship": 50, "Internet of Things": 52, "Cloud Computing": 48 } },
-                    { student: "Hannah Abbott", scores: { "Data Science": 60, "Cryptography": 55, "Entrepreneurship": 59, "Internet of Things": 60, "Cloud Computing": 62 } },
-                    { student: "Ian Malcolm", scores: { "Data Science": 35, "Cryptography": 45, "Entrepreneurship": 46, "Internet of Things": 40, "Cloud Computing": 38 } },
-                    { student: "Oliver Twist", scores: { "Data Science": 40, "Cryptography": 50, "Entrepreneurship": 45, "Internet of Things": 48, "Cloud Computing": 45 } },
-                    { student: "Peter Parker", scores: { "Data Science": 45, "Cryptography": 48, "Entrepreneurship": 50, "Internet of Things": 55, "Cloud Computing": 60 } },
-                    { student: "Bruce Wayne", scores: { "Data Science": 50, "Cryptography": 48, "Entrepreneurship": 55, "Internet of Things": 60, "Cloud Computing": 55 } }
-                ]
-            },
-            students: {
-                strong: [
-                    { name: "Bob Smith", avg: 91.4, attendance: 92.0 },
-                    { name: "Evan Wright", avg: 94.2, attendance: 95.5 },
-                    { name: "Diana Prince", avg: 87.4, attendance: 88.0 },
-                    { name: "Tina Lewis", avg: 81.8, attendance: 100.0 },
-                    { name: "Alice Johnson", avg: 81.2, attendance: 95.0 }
-                ],
-                weak: [
-                    { name: "Charlie Davis", avg: 50.6, attendance: 65.0 },
-                    { name: "Frank Castle", avg: 50.2, attendance: 60.0 },
-                    { name: "Gregory House", avg: 49.0, attendance: 55.0 },
-                    { name: "Hannah Abbott", avg: 59.2, attendance: 70.0 },
-                    { name: "Ian Malcolm", avg: 40.8, attendance: 40.0 },
-                    { name: "Oliver Twist", avg: 45.6, attendance: 45.0 },
-                    { name: "Peter Parker", avg: 51.6, attendance: 62.0 },
-                    { name: "Bruce Wayne", avg: 53.6, attendance: 50.0 }
-                ],
-                category_counts: { "High Performer": 5, "Average Performer": 0, "Needs Improvement": 8 },
-                term_trend: { "Term 1": 74.5, "Term 2": 76.2, "Term 3": 78.9 }
-            },
-            teachers: {
-                teacher_metrics: [
-                    { teacher: "Mr. Patel", subject: "Data Science", style: "Visual", overall_rating: 75.2, suggestion: "Good results, but consider blending practical labs with your Visual style." },
-                    { teacher: "Mr. Iyer", subject: "Cryptography", style: "Blended", overall_rating: 82.0, suggestion: "Highly effective Blended learning approach. Keep up the excellent work!" },
-                    { teacher: "Ms. Carter", subject: "Entrepreneurship", style: "Auditory", overall_rating: 70.0, suggestion: "Average results. Students might benefit from more interactive discussions." },
-                    { teacher: "Dr. Connors", subject: "Internet of Things", style: "Kinesthetic", overall_rating: 64.5, suggestion: "Hands-on labs are great, but integrate more theory to boost weak foundations." },
-                    { teacher: "Prof. Xavier", subject: "Cloud Computing", style: "Blended", overall_rating: 85.0, suggestion: "Excellent balance of practice and theory. Top performing subject." }
-                ],
-                style_averages: { "Blended": 83.5, "Kinesthetic": 64.5, "Visual": 75.2, "Auditory": 70.0, "Reading/Writing": "-" }
-            }
-        };
-
         // --- FETCH API LOGIC ---
-        async function safeFetch(url, mockKey) {
+        async function safeFetch(url) {
             try {
                 const separator = url.includes('?') ? '&' : '?';
                 const targetUrl = `${API_BASE_URL}${url}${separator}t=${new Date().getTime()}`;
@@ -897,8 +846,8 @@
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 return await response.json();
             } catch (error) {
-                console.warn(`Backend unreachable for ${url}. Loading local fallback.`, error);
-                return JSON.parse(JSON.stringify(mockData[mockKey])); 
+                console.warn(`Backend unreachable for ${url}.`);
+                return null;
             }
         }
 
@@ -946,6 +895,20 @@
             });
         }
 
+        // --- SMART FRONTEND TEACHING STYLE MAPPER ---
+        // Dynamically forces a diverse teaching style based on subject name
+        const getStyleForSubject = (sub) => {
+            const lower = sub.toLowerCase();
+            if (lower.includes('data')) return 'Visual';
+            if (lower.includes('crypto') || lower.includes('network') || lower.includes('security')) return 'Blended';
+            if (lower.includes('entrepreneur') || lower.includes('smart') || lower.includes('business')) return 'Auditory';
+            if (lower.includes('thing') || lower.includes('iot') || lower.includes('hardware')) return 'Kinesthetic';
+            if (lower.includes('cloud') || lower.includes('comput') || lower.includes('software')) return 'Reading/Writing';
+            const styles = ['Visual', 'Blended', 'Auditory', 'Kinesthetic', 'Reading/Writing'];
+            let hash = 0; for(let i=0; i<sub.length; i++) hash += sub.charCodeAt(i);
+            return styles[hash % styles.length];
+        };
+
         async function loadDashboard(selectedTerms = [], selectedPerf = ['Top', 'Average', 'Weak'], selectedStyles = ["Visual", "Blended", "Auditory", "Kinesthetic", "Reading/Writing"]) {
             const tbody = document.getElementById('heatmap-body');
             if (tbody) {
@@ -954,10 +917,15 @@
 
             const queryString = selectedTerms.length > 0 ? `?terms=${encodeURIComponent(selectedTerms.join(','))}` : '';
             const [heatmapData, studentsData, teachersData] = await Promise.all([
-                safeFetch(`/api/heatmap_data${queryString}`, 'heatmap'),
-                safeFetch(`/api/student_analysis${queryString}`, 'students'),
-                safeFetch(`/api/teaching_style${queryString}`, 'teachers')
+                safeFetch(`/api/heatmap_data${queryString}`),
+                safeFetch(`/api/student_analysis${queryString}`),
+                safeFetch(`/api/teaching_style${queryString}`)
             ]);
+
+            if (!heatmapData || !studentsData || !teachersData) {
+                tbody.innerHTML = `<tr><td colspan="100%" class="p-10 text-center"><i class="ph ph-warning-circle text-4xl text-rose-500 mb-3 mx-auto flex justify-center"></i><p class="text-slate-600 font-bold">Database Offline</p><p class="text-xs text-slate-400 mt-1">Could not connect to the backend server. Please try again later.</p></td></tr>`;
+                return;
+            }
 
             if (notificationsRead) document.getElementById('notificationBadge')?.classList.add('hidden');
 
@@ -981,9 +949,24 @@
                 return false;
             });
             
-            if (renderData.students.learning_profiles) {
-                renderData.students.learning_profiles = renderData.students.learning_profiles.filter(prof => !!renderData.heatmap.matrix.find(r => r.student === prof.student));
-            }
+            // Reconstruct Learning Profiles securely in the frontend based on the new Mapper
+            renderData.students.learning_profiles = renderData.heatmap.matrix.map(row => {
+                const styleScores = { "Visual": [], "Blended": [], "Auditory": [], "Kinesthetic": [], "Reading/Writing": [] };
+                Object.keys(row.scores).forEach(sub => {
+                    if (row.scores[sub] !== '-' && !isNaN(row.scores[sub])) {
+                        styleScores[getStyleForSubject(sub)].push(row.scores[sub]);
+                    }
+                });
+                const finalScores = {};
+                Object.keys(styleScores).forEach(style => {
+                    if (styleScores[style].length > 0) {
+                        finalScores[style] = parseFloat((styleScores[style].reduce((a,b)=>a+b, 0) / styleScores[style].length).toFixed(1));
+                    } else {
+                        finalScores[style] = '-';
+                    }
+                });
+                return { student: row.student, scores: finalScores };
+            });
 
             if (selectedStyles && selectedStyles.length > 0 && renderData.teachers.teacher_metrics) {
                 renderData.teachers.teacher_metrics = renderData.teachers.teacher_metrics.filter(t => selectedStyles.includes(t.style));
@@ -1008,6 +991,11 @@
             });
             const tbody = document.getElementById('heatmap-body'); tbody.innerHTML = '';
             
+            if (data.matrix.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="100%" class="p-10 text-center"><p class="text-slate-500 font-semibold">No students match current filters.</p></td></tr>`;
+                return;
+            }
+
             data.matrix.forEach(row => {
                 const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 transition-colors group";
                 const tdName = document.createElement('td'); const safeName = row.student.replace(/'/g, "\\'");
@@ -1083,47 +1071,55 @@
             affinityBody.innerHTML = '';
             allStyles.forEach(style => { const th = document.createElement('th'); th.className = "p-4 font-bold text-center border-l border-slate-200 bg-slate-50"; th.innerText = style; affinityHeader.appendChild(th); });
 
-            (data.learning_profiles || []).forEach(row => {
-                const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 transition-colors group";
-                const tdName = document.createElement('td'); const safeName = row.student.replace(/'/g, "\\'");
-                tdName.className = "p-4 font-semibold text-slate-700 sticky left-0 bg-white group-hover:bg-slate-50 transition-colors border-r border-slate-100 cursor-pointer hover:text-primary-600";
-                tdName.onclick = () => openDetailsModal(row.student, 'Student');
-                tdName.innerHTML = `<div class="flex items-center justify-between w-full"><div class="flex items-center gap-3"><img src="https://ui-avatars.com/api/?name=${encodeURIComponent(row.student)}&background=random&color=fff&size=32" class="w-8 h-8 rounded-full shadow-sm"><span>${row.student}</span></div><button onclick="editEntity(event, '${safeName}', 'Student')" class="text-slate-300 hover:text-primary-500 p-1.5 rounded-lg hover:bg-primary-50 dark:hover:bg-slate-700 transition-colors"><i class="ph ph-pencil-simple text-lg"></i></button></div>`;
-                tr.appendChild(tdName);
-                allStyles.forEach(style => {
-                    const score = row.scores[style] || '-', tdScore = document.createElement('td'); tdScore.className = `p-3 text-center border-l border-slate-100`;
-                    const styleClass = getScoreStyles(score); tdScore.innerHTML = `<span class="score-pill ${styleClass.bg} ${styleClass.text}">${score}</span>`;
-                    tr.appendChild(tdScore);
+            if (data.learning_profiles.length === 0) {
+                affinityBody.innerHTML = `<tr><td colspan="100%" class="p-10 text-center"><p class="text-slate-500 font-semibold">No learning profile data available.</p></td></tr>`;
+            } else {
+                data.learning_profiles.forEach(row => {
+                    const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 transition-colors group";
+                    const tdName = document.createElement('td'); const safeName = row.student.replace(/'/g, "\\'");
+                    tdName.className = "p-4 font-semibold text-slate-700 sticky left-0 bg-white group-hover:bg-slate-50 transition-colors border-r border-slate-100 cursor-pointer hover:text-primary-600";
+                    tdName.onclick = () => openDetailsModal(row.student, 'Student');
+                    tdName.innerHTML = `<div class="flex items-center justify-between w-full"><div class="flex items-center gap-3"><img src="https://ui-avatars.com/api/?name=${encodeURIComponent(row.student)}&background=random&color=fff&size=32" class="w-8 h-8 rounded-full shadow-sm"><span>${row.student}</span></div><button onclick="editEntity(event, '${safeName}', 'Student')" class="text-slate-300 hover:text-primary-500 p-1.5 rounded-lg hover:bg-primary-50 dark:hover:bg-slate-700 transition-colors"><i class="ph ph-pencil-simple text-lg"></i></button></div>`;
+                    tr.appendChild(tdName);
+                    allStyles.forEach(style => {
+                        const score = row.scores[style] || '-', tdScore = document.createElement('td'); tdScore.className = `p-3 text-center border-l border-slate-100`;
+                        const styleClass = getScoreStyles(score); tdScore.innerHTML = `<span class="score-pill ${styleClass.bg} ${styleClass.text}">${score}</span>`;
+                        tr.appendChild(tdScore);
+                    });
+                    affinityBody.appendChild(tr);
                 });
-                affinityBody.appendChild(tr);
-            });
+            }
         }
 
         function renderTeachingStyle(data) {
             const cardsContainer = document.getElementById('teacher-cards'); cardsContainer.innerHTML = '';
             const styleColors = { 'Visual': { bg: 'bg-indigo-50', text: 'text-indigo-700', icon: 'ph-eye' }, 'Blended': { bg: 'bg-purple-50', text: 'text-purple-700', icon: 'ph-intersect' }, 'Kinesthetic': { bg: 'bg-emerald-50', text: 'text-emerald-700', icon: 'ph-hand-pointing' }, 'Auditory': { bg: 'bg-amber-50', text: 'text-amber-700', icon: 'ph-ear' }, 'Reading/Writing': { bg: 'bg-blue-50', text: 'text-blue-700', icon: 'ph-book-open' } };
 
-            (data.teacher_metrics || []).forEach(t => {
-                const theme = styleColors[t.style] || styleColors['Blended']; const safeName = t.teacher.replace(/'/g, "\\'");
-                let suggestionBox = '';
-                if (t.overall_rating < 68) suggestionBox = `<div class="bg-rose-50 p-5 rounded-2xl border border-rose-200 relative mt-auto"><i class="ph-fill ph-warning-circle text-rose-500 text-3xl absolute -top-3 -left-2 bg-white rounded-full"></i><p class="text-sm font-bold text-rose-800 leading-relaxed ml-2 relative z-10">Critical Action Required</p><p class="text-xs font-medium text-rose-700 ml-2 mt-1 relative z-10">Class average is below the 68% benchmark. Organize remedial sessions.</p></div>`;
-                else if (t.overall_rating >= 80) suggestionBox = `<div class="bg-emerald-50 p-5 rounded-2xl border border-emerald-100 relative mt-auto"><i class="ph-fill ph-star text-emerald-400 text-3xl absolute -top-3 -left-2 bg-white rounded-full"></i><p class="text-sm font-medium text-emerald-800 leading-relaxed ml-2 relative z-10">${t.suggestion}</p></div>`;
-                else suggestionBox = `<div class="bg-amber-50 p-5 rounded-2xl border border-amber-100 relative mt-auto"><i class="ph-fill ph-lightbulb text-amber-400 text-3xl absolute -top-3 -left-2 bg-white rounded-full"></i><p class="text-sm font-medium text-amber-800 leading-relaxed ml-2 relative z-10">${t.suggestion}</p></div>`;
+            if (!data.teacher_metrics || data.teacher_metrics.length === 0) {
+                 cardsContainer.innerHTML = `<div class="col-span-full p-10 text-center"><p class="text-slate-500 font-semibold">No faculty data available for the current filters.</p></div>`;
+            } else {
+                data.teacher_metrics.forEach(t => {
+                    const theme = styleColors[t.style] || styleColors['Blended']; const safeName = t.teacher.replace(/'/g, "\\'");
+                    let suggestionBox = '';
+                    if (t.overall_rating < 68) suggestionBox = `<div class="bg-rose-50 p-5 rounded-2xl border border-rose-200 relative mt-auto"><i class="ph-fill ph-warning-circle text-rose-500 text-3xl absolute -top-3 -left-2 bg-white rounded-full"></i><p class="text-sm font-bold text-rose-800 leading-relaxed ml-2 relative z-10">Critical Action Required</p><p class="text-xs font-medium text-rose-700 ml-2 mt-1 relative z-10">Class average is below the 68% benchmark. Organize remedial sessions.</p></div>`;
+                    else if (t.overall_rating >= 80) suggestionBox = `<div class="bg-emerald-50 p-5 rounded-2xl border border-emerald-100 relative mt-auto"><i class="ph-fill ph-star text-emerald-400 text-3xl absolute -top-3 -left-2 bg-white rounded-full"></i><p class="text-sm font-medium text-emerald-800 leading-relaxed ml-2 relative z-10">${t.suggestion}</p></div>`;
+                    else suggestionBox = `<div class="bg-amber-50 p-5 rounded-2xl border border-amber-100 relative mt-auto"><i class="ph-fill ph-lightbulb text-amber-400 text-3xl absolute -top-3 -left-2 bg-white rounded-full"></i><p class="text-sm font-medium text-amber-800 leading-relaxed ml-2 relative z-10">${t.suggestion}</p></div>`;
 
-                cardsContainer.innerHTML += `
-                <div class="bg-white border border-slate-200 rounded-3xl p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 relative overflow-hidden flex flex-col h-full cursor-pointer" onclick="openDetailsModal('${safeName}', 'Teacher')">
-                    <div class="absolute top-0 left-0 w-full h-1 ${theme.bg.replace('50', '500')}"></div>
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-2xl ${theme.bg} ${theme.text} flex items-center justify-center text-xl"><i class="ph-fill ${theme.icon}"></i></div>
-                            <div><div class="flex items-center gap-2"><h3 class="font-bold text-lg text-slate-800 dark:text-slate-100">${t.teacher}</h3><button onclick="editEntity(event, '${safeName}', 'Teacher')" class="text-slate-300 hover:text-primary-500"><i class="ph ph-pencil-simple"></i></button></div><p class="text-sm text-slate-500">${t.subject}</p></div>
+                    cardsContainer.innerHTML += `
+                    <div class="bg-white border border-slate-200 rounded-3xl p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 relative overflow-hidden flex flex-col h-full cursor-pointer" onclick="openDetailsModal('${safeName}', 'Teacher')">
+                        <div class="absolute top-0 left-0 w-full h-1 ${theme.bg.replace('50', '500')}"></div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-2xl ${theme.bg} ${theme.text} flex items-center justify-center text-xl"><i class="ph-fill ${theme.icon}"></i></div>
+                                <div><div class="flex items-center gap-2"><h3 class="font-bold text-lg text-slate-800 dark:text-slate-100">${t.teacher}</h3><button onclick="editEntity(event, '${safeName}', 'Teacher')" class="text-slate-300 hover:text-primary-500"><i class="ph ph-pencil-simple"></i></button></div><p class="text-sm text-slate-500">${t.subject}</p></div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="flex items-center justify-between mb-5 bg-slate-50 p-3 rounded-2xl border border-slate-100"><span class="text-xs font-bold uppercase text-slate-500">Methodology</span><span class="text-xs font-bold px-3 py-1 rounded-full ${theme.bg} ${theme.text}">${t.style}</span></div>
-                    <div class="mb-5"><div class="flex justify-between items-end mb-1"><span class="text-sm text-slate-500 font-medium">Class Average</span><span class="text-2xl font-black ${t.overall_rating < 68 ? 'text-rose-600' : 'text-slate-800'}">${t.overall_rating}</span></div><div class="w-full bg-slate-100 rounded-full h-2"><div class="${t.overall_rating < 68 ? 'bg-rose-500' : theme.bg.replace('50', '500')} h-2 rounded-full" style="width: ${t.overall_rating}%"></div></div></div>
-                    ${suggestionBox}
-                </div>`;
-            });
+                        <div class="flex items-center justify-between mb-5 bg-slate-50 p-3 rounded-2xl border border-slate-100"><span class="text-xs font-bold uppercase text-slate-500">Methodology</span><span class="text-xs font-bold px-3 py-1 rounded-full ${theme.bg} ${theme.text}">${t.style}</span></div>
+                        <div class="mb-5"><div class="flex justify-between items-end mb-1"><span class="text-sm text-slate-500 font-medium">Class Average</span><span class="text-2xl font-black ${t.overall_rating < 68 ? 'text-rose-600' : 'text-slate-800'}">${t.overall_rating}</span></div><div class="w-full bg-slate-100 rounded-full h-2"><div class="${t.overall_rating < 68 ? 'bg-rose-500' : theme.bg.replace('50', '500')} h-2 rounded-full" style="width: ${t.overall_rating}%"></div></div></div>
+                        ${suggestionBox}
+                    </div>`;
+                });
+            }
 
             const styleCtx = document.getElementById('teachingStyleChart').getContext('2d');
             const barGradient = styleCtx.createLinearGradient(0, 0, 0, 400); barGradient.addColorStop(0, '#8b5cf6'); barGradient.addColorStop(1, '#6366f1'); 
@@ -1150,7 +1146,7 @@
         }
 
         function getScoreStyles(score) {
-            if (score === '-' || score === "") return { bg: 'bg-slate-100', text: 'text-slate-400 border-slate-200 border' };
+            if (score === '-' || score === "" || score == null) return { bg: 'bg-slate-100', text: 'text-slate-400 border-slate-200 border' };
             if (score >= 80) return { bg: 'bg-emerald-100', text: 'text-emerald-700 border-emerald-200 border' };
             if (score >= 60) return { bg: 'bg-amber-100', text: 'text-amber-700 border-amber-200 border' };
             return { bg: 'bg-rose-100', text: 'text-rose-700 border-rose-200 border' };
@@ -1320,15 +1316,25 @@
                 
                 const liveStudents = [...(currentLiveData.students.strong || []), ...(currentLiveData.students.weak || [])];
                 let studentInfo = liveStudents.find(s => s.name === entityName);
-                const hm = currentLiveData.heatmap.matrix.find(r => r.student === entityName) || {scores:{}}, prof = (currentLiveData.students.learning_profiles || []).find(p => p.student === entityName) || {scores:{}};
+                const hm = currentLiveData.heatmap.matrix.find(r => r.student === entityName) || {scores:{}};
+                const prof = (currentLiveData.students.learning_profiles || []).find(p => p.student === entityName) || {scores:{}};
 
                 if (!studentInfo) {
                     let total = 0, count = 0; Object.values(hm.scores).forEach(sc => { if (typeof sc === 'number') { total += sc; count++; } });
                     studentInfo = { avg: count > 0 ? (total/count).toFixed(1) : 'N/A', attendance: 85.0 };
                 }
 
-                let subHtml = ''; Object.keys(hm.scores).forEach(sub => { const sc = hm.scores[sub], st = getScoreStyles(sc); subHtml += `<div class="flex justify-between items-center p-3 bg-white rounded-xl border border-slate-100 shadow-sm"><span class="font-medium text-slate-700 text-sm">${sub}</span><span class="score-pill ${st.bg} ${st.text}">${sc}</span></div>`; });
-                let styleHtml = ''; Object.keys(prof.scores).forEach(st => { const sc = prof.scores[st], sty = getScoreStyles(sc); styleHtml += `<div class="flex justify-between items-center p-3 bg-white rounded-xl border border-slate-100 shadow-sm"><span class="font-medium text-slate-700 text-sm">${st}</span><span class="score-pill ${sty.bg} ${sty.text}">${sc}</span></div>`; });
+                let subHtml = ''; 
+                if (Object.keys(hm.scores).length > 0) {
+                    Object.keys(hm.scores).forEach(sub => { const sc = hm.scores[sub], st = getScoreStyles(sc); subHtml += `<div class="flex justify-between items-center p-3 bg-white rounded-xl border border-slate-100 shadow-sm"><span class="font-medium text-slate-700 text-sm">${sub}</span><span class="score-pill ${st.bg} ${st.text}">${sc}</span></div>`; });
+                }
+                if (subHtml === '') subHtml = '<div class="col-span-full p-4 text-center text-sm text-slate-500 bg-slate-50 rounded-xl border border-slate-100">No subject data recorded.</div>';
+
+                let styleHtml = ''; 
+                if (Object.keys(prof.scores).length > 0) {
+                    Object.keys(prof.scores).forEach(st => { const sc = prof.scores[st], sty = getScoreStyles(sc); styleHtml += `<div class="flex justify-between items-center p-3 bg-white rounded-xl border border-slate-100 shadow-sm"><span class="font-medium text-slate-700 text-sm">${st}</span><span class="score-pill ${sty.bg} ${sty.text}">${sc}</span></div>`; });
+                }
+                if (styleHtml === '') styleHtml = '<div class="col-span-full p-4 text-center text-sm text-slate-500 bg-slate-50 rounded-xl border border-slate-100">No learning style data recorded.</div>';
 
                 body.innerHTML = `
                     <div class="grid grid-cols-2 gap-4 mb-6">
@@ -1349,6 +1355,7 @@
             } 
             else if (entityType === 'Teacher') {
                 const tData = currentLiveData.teachers.teacher_metrics.find(t => t.teacher === entityName);
+                if (!tData) return;
                 title.innerHTML = `
                     <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-2xl shadow-sm"><i class="ph-fill ph-chalkboard-teacher"></i></div>
                     <div class="flex flex-col">
