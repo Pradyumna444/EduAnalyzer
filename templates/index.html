@@ -228,6 +228,13 @@
                             <span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse"></span> Checking DB...
                         </div>
                         
+                        <!-- About Button (Fixed to open Modal instead of 404 page) -->
+                        <div class="relative">
+                            <button onclick="openAboutModal()" class="block p-2 text-slate-400 hover:text-primary-500 hover:bg-primary-50 hover:scale-110 hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] rounded-full transition-all duration-300 relative" aria-label="About">
+                                <i class="ph ph-info text-xl"></i>
+                            </button>
+                        </div>
+
                         <div class="relative">
                             <button id="notificationBtn" class="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-full transition-colors relative" aria-label="Notifications">
                                 <i class="ph ph-bell text-xl"></i>
@@ -642,6 +649,89 @@
         </div>
     </div>
 
+    <!-- About Modal -->
+    <div id="aboutModal" class="fixed inset-0 z-[160] hidden">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeAboutModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col max-h-[90vh] animate-slide-up">
+            
+            <!-- Decorative Top Border -->
+            <div class="h-2 w-full bg-gradient-primary"></div>
+
+            <div class="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center text-white shadow-glow">
+                        <i class="ph ph-info text-xl"></i>
+                    </div>
+                    About EduAnalyzer
+                </h3>
+                <button onclick="closeAboutModal()" class="relative z-[200] text-slate-400 hover:text-rose-500 transition-colors bg-white dark:bg-slate-700 p-2 rounded-full shadow-sm border border-slate-100 dark:border-slate-600">
+                    <i class="ph ph-x text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-8 overflow-y-auto custom-scrollbar flex-1 space-y-8">
+                <!-- Description Section -->
+                <div>
+                    <h4 class="text-sm font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider mb-3 flex items-center gap-2"><i class="ph-fill ph-rocket-launch text-lg"></i> Project Overview</h4>
+                    <div class="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-700">
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
+                            EduAnalyzer is a premium data-driven dashboard designed to revolutionize educational insights. It integrates a powerful <strong class="text-slate-800 dark:text-white">Class Performance Heatmap</strong> to visually identify learning gaps and top performers, alongside a sophisticated <strong class="text-slate-800 dark:text-white">Teaching Style Analyzer</strong> that correlates pedagogical methodologies with student success rates, enabling instructors to optimize their approach.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Team Section -->
+                <div>
+                    <h4 class="text-sm font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="ph-fill ph-users-three text-lg"></i> Meet The Team 
+                        <span class="text-[0.65rem] font-semibold text-slate-400 ml-auto normal-case tracking-normal border border-slate-200 dark:border-slate-700 px-2 py-1 rounded-md bg-slate-50 dark:bg-slate-800/50 hidden sm:inline-block">Click a member to view role</span>
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div onclick="this.querySelector('.role-text').classList.toggle('hidden')" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 transition-all hover:-translate-y-1 hover:shadow-lg hover:border-primary-300 cursor-pointer group">
+                            <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex flex-shrink-0 items-center justify-center font-bold text-sm shadow-sm group-hover:scale-110 transition-transform duration-300">PD</div>
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">PRADYUMNA DAS</span>
+                                <span class="role-text hidden text-[0.65rem] font-bold text-indigo-500 uppercase tracking-widest mt-0.5 animate-fade-in">Lead Developer & Architect</span>
+                            </div>
+                        </div>
+                        <div onclick="this.querySelector('.role-text').classList.toggle('hidden')" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 transition-all hover:-translate-y-1 hover:shadow-lg hover:border-primary-300 cursor-pointer group">
+                            <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex flex-shrink-0 items-center justify-center font-bold text-sm shadow-sm group-hover:scale-110 transition-transform duration-300">RS</div>
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">RAJ NANDINI SWAIN</span>
+                                <span class="role-text hidden text-[0.65rem] font-bold text-rose-500 uppercase tracking-widest mt-0.5 animate-fade-in">Lead UI/UX Designer</span>
+                            </div>
+                        </div>
+                        <div onclick="this.querySelector('.role-text').classList.toggle('hidden')" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 transition-all hover:-translate-y-1 hover:shadow-lg hover:border-primary-300 cursor-pointer group">
+                            <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex flex-shrink-0 items-center justify-center font-bold text-sm shadow-sm group-hover:scale-110 transition-transform duration-300">PM</div>
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-slate-800 dark:text-slate-200 text-xs leading-tight">PADMINI P. MOHAPATRA</span>
+                                <span class="role-text hidden text-[0.65rem] font-bold text-emerald-500 uppercase tracking-widest mt-0.5 animate-fade-in">Data Analyst</span>
+                            </div>
+                        </div>
+                        <div onclick="this.querySelector('.role-text').classList.toggle('hidden')" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 transition-all hover:-translate-y-1 hover:shadow-lg hover:border-primary-300 cursor-pointer group">
+                            <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex flex-shrink-0 items-center justify-center font-bold text-sm shadow-sm group-hover:scale-110 transition-transform duration-300">PP</div>
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">PRINCE PRADHAN</span>
+                                <span class="role-text hidden text-[0.65rem] font-bold text-amber-500 uppercase tracking-widest mt-0.5 animate-fade-in">Backend Engineer</span>
+                            </div>
+                        </div>
+                        <div onclick="this.querySelector('.role-text').classList.toggle('hidden')" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 transition-all hover:-translate-y-1 hover:shadow-lg hover:border-primary-300 cursor-pointer group">
+                            <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex flex-shrink-0 items-center justify-center font-bold text-sm shadow-sm group-hover:scale-110 transition-transform duration-300">SM</div>
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-slate-800 dark:text-slate-200 text-xs leading-tight">STHITA P. MOHAPATRA</span>
+                                <span class="role-text hidden text-[0.65rem] font-bold text-purple-500 uppercase tracking-widest mt-0.5 animate-fade-in">Systems QA Engineer</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-center">
+                <p class="text-xs text-slate-400 font-medium">© 2026 EduAnalyzer Project Team</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Application Logic -->
     <script>
         // --- GLOBAL CHART DEFAULTS & CONFIG ---
@@ -788,9 +878,11 @@
         function closeProfileModal() { document.querySelectorAll('#profileModal').forEach(el => el.classList.add('hidden')); }
         function closeAddStudentModal() { document.querySelectorAll('#addStudentModal').forEach(el => el.classList.add('hidden')); }
         function closeDetailsModal() { document.querySelectorAll('#entityModal').forEach(el => el.classList.add('hidden')); }
+        function closeAboutModal() { document.querySelectorAll('#aboutModal').forEach(el => el.classList.add('hidden')); }
 
         function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
         function openProfileModal() { document.getElementById('profileModal').classList.remove('hidden'); }
+        function openAboutModal() { document.getElementById('aboutModal').classList.remove('hidden'); }
 
         function openAddStudentModal() {
             if (!currentLiveData.heatmap || !currentLiveData.heatmap.subjects) {
